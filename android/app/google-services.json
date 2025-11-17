@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "615335774911",
+    "project_id": "lepi-store-app",
+    "storage_bucket": "lepi-store-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615335774911:android:4eca74b006e4de6589540a",
+        "android_client_info": {
+          "package_name": "com.example.etanonapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ6YCCoMJkOvYzCGE28yvkhWZAQulEh3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615335774911:android:4ff7f36185a4e0fd89540a",
+        "android_client_info": {
+          "package_name": "com.example.lepi_store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ6YCCoMJkOvYzCGE28yvkhWZAQulEh3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
