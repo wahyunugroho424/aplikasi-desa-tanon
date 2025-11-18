@@ -28,7 +28,8 @@ import 'modules/perangkat_desa/pages/data/services/pd_services.dart';
 import 'modules/perangkat_desa/pages/data/services/pd_services_form.dart';
 import 'modules/perangkat_desa/pages/data/news/pd_news.dart';
 import 'modules/perangkat_desa/pages/data/news/pd_news_form.dart';
-import 'modules/perangkat_desa/pages/pd_data_requests.dart';
+import 'modules/perangkat_desa/pages/data/requests/pd_requests.dart';
+import 'modules/perangkat_desa/pages/data/requests/pd_requests_detail.dart';
 
 // === WARGA ===
 import 'modules/warga/wg_main.dart';
@@ -62,37 +63,25 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/pd/data', builder: (_, __) => const DesaDataPage()),
         GoRoute(path: '/pd/data/users', builder: (_, __) => const DesaDataUsersPage()),
         GoRoute(path: '/pd/data/users/add', builder: (_, __) => const DesaDataUsersFormPage()),
-        GoRoute(
-          path: '/pd/data/users/edit',
-          builder: (context, state) => DesaDataUsersFormPage(
-            id: state.uri.queryParameters['id'],
-          ),
-        ),
+        GoRoute(path: '/pd/data/users/edit', builder: (context, state) => DesaDataUsersFormPage(id: state.uri.queryParameters['id'])),
         GoRoute(path: '/pd/data/areas', builder: (_, __) => const DesaDataAreasPage()),
         GoRoute(path: '/pd/data/areas/add', builder: (_, __) => const DesaDataAreasFormPage()),
-        GoRoute(
-          path: '/pd/data/areas/edit',
-          builder: (context, state) => DesaDataAreasFormPage(
-            id: state.uri.queryParameters['id'],
-          ),
-        ),
+        GoRoute(path: '/pd/data/areas/edit', builder: (context, state) => DesaDataAreasFormPage(id: state.uri.queryParameters['id'])),
         GoRoute(path: '/pd/data/services', builder: (_, __) => const DesaDataServicesPage()),
         GoRoute(path: '/pd/data/services/add', builder: (_, __) => const DesaDataServicesFormPage()),
-        GoRoute(
-          path: '/pd/data/services/edit',
-          builder: (context, state) => DesaDataServicesFormPage(
-            id: state.uri.queryParameters['id'],
-          ),
-        ),
+        GoRoute(path: '/pd/data/services/edit', builder: (context, state) => DesaDataServicesFormPage(id: state.uri.queryParameters['id'])),
         GoRoute(path: '/pd/data/news', builder: (_, __) => const DesaDataNewsPage()),
         GoRoute(path: '/pd/data/news/add', builder: (_, __) => const DesaDataNewsFormPage()),
-        GoRoute(
-          path: '/pd/data/news/edit',
-          builder: (context, state) => DesaDataNewsFormPage(
-            id: state.uri.queryParameters['id'],
-          ),
-        ),
+        GoRoute(path: '/pd/data/news/edit', builder: (context, state) => DesaDataNewsFormPage(id: state.uri.queryParameters['id'])),
         GoRoute(path: '/pd/data/requests', builder: (_, __) => const DesaDataRequestsPage()),
+        GoRoute(
+          path: '/pd/data/requests/detail',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return DesaDataRequestsDetailPage(id: extra['id']);
+          },
+        ),
+
         GoRoute(path: '/pd/berita', builder: (_, __) => BeritaPage()),
         GoRoute(
           path: '/pd/berita/detail',
@@ -102,19 +91,11 @@ final GoRouter appRouter = GoRouter(
             return BeritaDetailPage(newsId: newsId);
           },
         ),
+
         GoRoute(path: '/pd/akun', builder: (_, __) => AkunPage(routePrefix: 'pd')),
-        GoRoute(
-          path: '/pd/akun/profil',
-          builder: (_, __) => const AkunProfilPage(routePrefix: 'pd'),
-        ),
-        GoRoute(
-          path: '/pd/akun/profil/form',
-          builder: (_, __) => const AkunProfilFormPage(routePrefix: 'pd'),
-        ),
-        GoRoute(
-          path: '/pd/akun/password',
-          builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'pd'),
-        ),
+        GoRoute(path: '/pd/akun/profil', builder: (_, __) => const AkunProfilPage(routePrefix: 'pd')),
+        GoRoute(path: '/pd/akun/profil/form', builder: (_, __) => const AkunProfilFormPage(routePrefix: 'pd')),
+        GoRoute(path: '/pd/akun/password', builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'pd')),
       ],
     ),
 
@@ -125,6 +106,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/wg/beranda', builder: (_, __) => WargaBerandaPage()),
         GoRoute(path: '/wg/pengajuan', builder: (_, __) => WargaPengajuanPage()),
         GoRoute(path: '/wg/pengajuan/add', builder: (_, __) => const WargaPengajuanFormPage()),
+        GoRoute(path: '/wg/pengajuan/success', builder: (_, __) => const WargaPengajuanSuccessPage()),
         GoRoute(
           path: '/wg/pengajuan/detail',
           builder: (context, state) {
@@ -132,7 +114,6 @@ final GoRouter appRouter = GoRouter(
             return WargaPengajuanDetailPage(data: data);
           },
         ),
-        GoRoute(path: '/wg/pengajuan/success', builder: (_, __) => const WargaPengajuanSuccessPage()),
         GoRoute(path: '/wg/berita', builder: (_, __) => BeritaPage()),
         GoRoute(
           path: '/wg/berita/detail',
@@ -142,19 +123,11 @@ final GoRouter appRouter = GoRouter(
             return BeritaDetailPage(newsId: newsId);
           },
         ),
+
         GoRoute(path: '/wg/akun', builder: (_, __) => AkunPage(routePrefix: 'wg')),
-        GoRoute(
-          path: '/wg/akun/profil',
-          builder: (_, __) => const AkunProfilPage(routePrefix: 'wg'),
-        ),
-        GoRoute(
-          path: '/wg/akun/profil/form',
-          builder: (_, __) => const AkunProfilFormPage(routePrefix: 'wg'),
-        ),
-        GoRoute(
-          path: '/wg/akun/password',
-          builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'wg'),
-        ),
+        GoRoute(path: '/wg/akun/profil', builder: (_, __) => const AkunProfilPage(routePrefix: 'wg')),
+        GoRoute(path: '/wg/akun/profil/form', builder: (_, __) => const AkunProfilFormPage(routePrefix: 'wg')),
+        GoRoute(path: '/wg/akun/password', builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'wg')),
       ],
     ),
 
