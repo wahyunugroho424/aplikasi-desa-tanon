@@ -210,32 +210,30 @@ class _DesaDataNewsPageState extends State<DesaDataNewsPage> {
   }
 
   Future<void> _confirmDelete(String id) async {
-  final confirm = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Konfirmasi Hapus'),
-      content: const Text('Yakin ingin menghapus data?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Batal'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCA2424)),
-          child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-  );
-
-  if (confirm == true) {
-    await controller.deleteNews(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Berita berhasil dihapus')),
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Yakin ingin menghapus data?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCA2424)),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
-    context.pop();
-  }
-}
 
+    if (confirm == true) {
+      await controller.deleteNews(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Berita berhasil dihapus')),
+      );
+    }
+  }
 }

@@ -146,33 +146,7 @@ class _DesaDataAreasPageState extends State<DesaDataAreasPage> {
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Color(0xFFCA2424)),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Konfirmasi Hapus'),
-                    content: const Text('Yakin ingin menghapus data?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Batal'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCA2424)),
-                        child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  await controller.deleteArea(area.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Data wilayah berhasil dihapus')),
-                  );
-                }
-              },
+              onPressed: () => _confirmDelete(area.id),
             ),
           ],
         ),
@@ -205,5 +179,36 @@ class _DesaDataAreasPageState extends State<DesaDataAreasPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Yakin ingin menghapus data?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFCA2424)),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await controller.deleteArea(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wilayah berhasil dihapus')),
+      );
+    }
   }
 }

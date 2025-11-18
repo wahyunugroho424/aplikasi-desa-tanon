@@ -154,33 +154,7 @@ class _DesaDataUsersPageState extends State<DesaDataUsersPage> {
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Color(0xFFCA2424)),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Konfirmasi Hapus'),
-                    content: const Text('Yakin ingin menghapus data?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Batal'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFCA2424)),
-                        child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  await controller.deleteUser(user.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Data pengguna berhasil dihapus')),
-                  );
-                }
-              },
+              onPressed: () => _confirmDelete(user.id),
             ),
           ],
         ),
@@ -261,5 +235,36 @@ class _DesaDataUsersPageState extends State<DesaDataUsersPage> {
     final dusun = parts.length > 2 ? parts[2] : '-';
 
     return 'RT $rt/RW $rw, Dsn. $dusun';
+  }
+
+  Future<void> _confirmDelete(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Yakin ingin menghapus data?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFCA2424)),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await controller.deleteUser(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pengguna berhasil dihapus')),
+      );
+    }
   }
 }
