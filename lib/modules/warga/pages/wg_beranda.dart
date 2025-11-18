@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/controllers/user_controller.dart';
 import '../../../../../core/controllers/service_controller.dart';
 import '../../../../../core/controllers/news_controller.dart';
+import '../../../../../core/controllers/auth_controller.dart';
 import '../../../../../core/models/news.dart';
 
 class WargaBerandaPage extends StatelessWidget {
@@ -16,73 +17,88 @@ class WargaBerandaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F6FF),
-      body: Stack(
-        clipBehavior: Clip.none,
+      body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            height: 250,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(45),
-                bottomRight: Radius.circular(45),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 250,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(45),
+                    bottomRight: Radius.circular(45),
+                  ),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/bg_beranda.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              image: const DecorationImage(
-                image: AssetImage('assets/images/bg_beranda.png'),
-                fit: BoxFit.cover,
+              Positioned(
+                left: 20,
+                top: 50,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: GestureDetector(
+                        onTap: () => context.push('/wg/akun'),
+                        child: const Icon(Icons.person, color: Color(0xFF4E82EA), size: 30),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    FutureBuilder<String>(
+                      future: userController.getUsernameById(AuthController().currentUser!.uid),
+                      builder: (context, snapshot) {
+                        final name = snapshot.data ?? '';
+                        return Text(
+                          'Hai, $name',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Selamat datang di E-Tanon Kab. Kediri',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Positioned(
+                left: 20,
+                right: 20,
+                top: 180,
+                child: _buildMainCard(context),
+              ),
+            ],
           ),
-          Positioned(
-            left: 20,
-            top: 50,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Color(0xFF4E82EA),
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Hai, Safira Nabila',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Selamat datang di E-Tanon Kab. Kediri',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 150),
+          Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                children: [
-                  _buildMainCard(context),
-                  const SizedBox(height: 20),
-                  _buildBeritaSection(context),
-                ],
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 170),
+                    _buildBeritaSection(context),
+                  ],
+                ),
+              ),  
             ),
           ),
         ],
@@ -189,7 +205,7 @@ class WargaBerandaPage extends StatelessWidget {
     required String route,
   }) {
     return GestureDetector(
-      onTap: () => context.go(route),
+      onTap: () => context.push(route),
       child: Container(
         height: 80,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -232,61 +248,60 @@ class WargaBerandaPage extends StatelessWidget {
   }
 
   Widget _buildBeritaSection(BuildContext context) {
-    return StreamBuilder<List<News>>(
-      stream: newsController.getPublishedNewsStream(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomNavHeight = kBottomNavigationBarHeight;
+    final mainCardHeight = 300;
+    final topOffset = 150;
+    final availableHeight = screenHeight - topOffset - mainCardHeight - bottomNavHeight - 30;
 
-        final berita = snapshot.data!.take(5).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Berita Terbaru',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF01002E),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => context.go('/wg/berita'),
-                  child: Text(
-                    'Lihat Semua',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF245BCA),
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              'Berita Terbaru',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF01002E),
+              ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 150,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
+            GestureDetector(
+              onTap: () => context.push('/pd/berita'),
+              child: Text(
+                'Lihat Semua',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF245BCA),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: availableHeight,
+          child: StreamBuilder<List<News>>(
+            stream: newsController.getPublishedNewsStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              final berita = snapshot.data!.take(5).toList();
+
+              return ListView.separated(
                 itemCount: berita.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final item = berita[index];
                   return GestureDetector(
-                    onTap: () => context.go(
-                      '/wg/berita/detail',
-                      extra: item.id,
-                    ),
+                    onTap: () => context.push('/pd/berita/detail', extra: {'newsId': item.id}),
                     child: Container(
-                      width: 140,
+                      height: 100,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
@@ -295,70 +310,66 @@ class WargaBerandaPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
                           ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
                             child: Image.network(
                               item.thumbnail,
-                              width: 140,
-                              height: 80,
+                              width: 100,
+                              height: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 140,
-                                  height: 80,
-                                  color: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 100,
+                                height: double.infinity,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.broken_image, size: 40, color: Colors.white),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF01002E),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    item.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF01002E),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item.publishedAt != null
-                                      ? "${item.publishedAt!.day.toString().padLeft(2,'0')} ${_monthName(item.publishedAt!.month)} ${item.publishedAt!.year}, ${item.publishedAt!.hour.toString().padLeft(2,'0')}:${item.publishedAt!.minute.toString().padLeft(2,'0')}"
-                                      : '',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.grey,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item.publishedAt != null
+                                        ? "${item.publishedAt!.day.toString().padLeft(2,'0')} ${_monthName(item.publishedAt!.month)} ${item.publishedAt!.year}, ${item.publishedAt!.hour.toString().padLeft(2,'0')}:${item.publishedAt!.minute.toString().padLeft(2,'0')}"
+                                        : '',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          )
                         ],
                       ),
                     ),
                   );
                 },
-              ),
-            ),
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

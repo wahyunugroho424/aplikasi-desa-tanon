@@ -68,7 +68,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
                         color: const Color(0xFFCEDDFF),
                         buttonColor: const Color(0xFF00194A),
                         buttonTextColor: Colors.white,
-                        onPressed: () => context.go('/pd/data/users'),
+                        onPressed: () => context.push('/pd/data/users'),
                       );
                     },
                   ),
@@ -87,7 +87,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
                         color: const Color(0xFFCEDDFF),
                         buttonColor: const Color(0xFF00194A),
                         buttonTextColor: Colors.white,
-                        onPressed: () => context.go('/pd/data/areas'),
+                        onPressed: () => context.push('/pd/data/areas'),
                       );
                     },
                   ),
@@ -106,7 +106,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
                         color: const Color(0xFF4E82EA),
                         buttonColor: const Color(0xFFCEDDFF),
                         buttonTextColor: const Color(0xFF01002E),
-                        onPressed: () => context.go('/pd/data/services'),
+                        onPressed: () => context.push('/pd/data/services'),
                       );
                     },
                   ),
@@ -121,7 +121,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
                     color: const Color(0xFFCEDDFF),
                     buttonColor: const Color(0xFF00194A),
                     buttonTextColor: Colors.white,
-                    onPressed: () => context.go('/pd/data/requests'),
+                    onPressed: () => context.push('/pd/data/requests'),
                   ),
                 ),
 
@@ -138,7 +138,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
                         color: const Color(0xFF4E82EA),
                         buttonColor: const Color(0xFFCEDDFF),
                         buttonTextColor: const Color(0xFF01002E),
-                        onPressed: () => context.go('/pd/data/news'),
+                        onPressed: () => context.push('/pd/data/news'),
                       );
                     },
                   ),

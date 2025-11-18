@@ -147,4 +147,8 @@ class RequestController {
     if (!doc.exists) return "-";
     return doc.data()?['name'] ?? "-";
   }
+
+  Stream<int> getTotalRequests() {
+    return getRequestsStream().map((list) => list.length);
+  }
 }

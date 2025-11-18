@@ -5,11 +5,52 @@ import '../../../../core/controllers/news_controller.dart';
 import '../../../../core/controllers/auth_controller.dart';
 import '../../../../core/models/news.dart';
 
-class BeritaPage extends StatelessWidget {
+class BeritaPage extends StatefulWidget {
+  const BeritaPage({super.key});
+
+  @override
+  State<BeritaPage> createState() => _BeritaPageState();
+}
+
+class _BeritaPageState extends State<BeritaPage> {
   final NewsController _newsController = NewsController();
   final AuthController _authController = AuthController();
-  
-  BeritaPage({super.key});
+  final TextEditingController _searchController = TextEditingController();
+
+  String _filter = 'Terbaru';
+  late Stream<List<News>> _newsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _newsStream = _newsController.getPublishedNewsStream();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _newsStream = _newsController.getFilteredNewsStream(_searchController.text);
+    });
+  }
+
+  void _applyFilter(String value) {
+    setState(() {
+      _filter = value;
+      _newsStream = _newsController.getPublishedNewsStream();
+      if (_filter == 'Terbaru') {
+        _newsStream = _newsController.getPublishedNewsStream();
+      } else if (_filter == 'Terlama') {
+        _newsStream = _newsController.getPublishedNewsStream().map((list) {
+          list.sort((a, b) {
+            final aDate = a.publishedAt ?? DateTime(0);
+            final bDate = b.publishedAt ?? DateTime(0);
+            return aDate.compareTo(bDate);
+          });
+          return list;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +92,7 @@ class BeritaPage extends StatelessWidget {
                         children: [
                           Expanded(
                             child: TextField(
+                              controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: 'Cari berita...',
                                 prefixIcon: const Icon(Icons.search),
@@ -60,21 +102,25 @@ class BeritaPage extends StatelessWidget {
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 0),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 0),
                               ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4E82EA),
-                              borderRadius: BorderRadius.circular(20),
+                          PopupMenuButton<String>(
+                            icon: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4E82EA),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(Icons.filter_list, color: Colors.white),
                             ),
-                            child: const Icon(Icons.filter_list,
-                                color: Colors.white),
+                            onSelected: _applyFilter,
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'Terbaru', child: Text('Terbaru')),
+                              PopupMenuItem(value: 'Terlama', child: Text('Terlama')),
+                            ],
                           ),
                         ],
                       ),
@@ -84,12 +130,12 @@ class BeritaPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 30),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: StreamBuilder<List<News>>(
-                stream: _newsController.getPublishedNewsStream(),
+                stream: _newsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -106,7 +152,7 @@ class BeritaPage extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10.0),
                         child: GestureDetector(
-                          onTap: () => context.go(
+                          onTap: () => context.push(
                             '/${_authController.currentUserRole == 'Warga' ? 'wg' : 'pd'}/berita/detail',
                             extra: {
                               'newsId': berita.id,
@@ -183,6 +229,15 @@ class BeritaPage extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Oleh: ${berita.userId}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
                     ),
                   ),
                 ],
