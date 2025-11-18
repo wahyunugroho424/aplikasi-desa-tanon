@@ -55,7 +55,7 @@ class WargaPengajuanSuccessPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () => context.go('/wg/pengajuan'),
+                  onPressed: () => context.push('/wg/pengajuan'),
                   child: Text(
                     'Kembali ke Menu Pengajuan',
                     style: GoogleFonts.poppins(

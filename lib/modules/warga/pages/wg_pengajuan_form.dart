@@ -104,7 +104,7 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
       );
 
       if (!mounted) return;
-      context.go('/wg/pengajuan/success');
+      context.push('/wg/pengajuan/success');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal membuat pengajuan: $e")),
@@ -134,7 +134,7 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-          onPressed: () => context.go('/wg/pengajuan'),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           "Tambah Pengajuan",

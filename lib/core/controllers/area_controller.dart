@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../models/area.dart';
 
 class AreaController {
@@ -69,39 +68,6 @@ class AreaController {
 
   Future<void> deleteArea(String id) async {
     await _firestore.collection(collectionName).doc(id).delete();
-  }
-
-  Future<void> deleteAreaWithConfirmation(BuildContext context, String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: const Text('Yakin ingin menghapus data?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCA2424),
-            ),
-            child: const Text(
-              'Hapus',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await deleteArea(id);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data area berhasil dihapus')),
-      );
-    }
   }
 
   Stream<List<Area>> getFilteredAreasStream(String keyword) {

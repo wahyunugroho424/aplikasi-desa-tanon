@@ -76,7 +76,7 @@ class _DesaDataServicesFormPageState extends State<DesaDataServicesFormPage> {
             .showSnackBar(const SnackBar(content: Text('Keperluan berhasil ditambahkan')));
       }
 
-      context.go('/pd/data/services');
+      context.pop();
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
@@ -98,7 +98,7 @@ class _DesaDataServicesFormPageState extends State<DesaDataServicesFormPage> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-          onPressed: () => context.go('/pd/data/services'),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           isEdit ? "Ubah Keperluan" : "Tambah Keperluan",

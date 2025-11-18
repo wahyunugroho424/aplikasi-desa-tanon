@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/controllers/auth_controller.dart';
 import '../../../../core/controllers/user_controller.dart';
 
 class AkunProfilPage extends StatefulWidget {
@@ -17,9 +16,7 @@ class AkunProfilPage extends StatefulWidget {
 class _AkunProfilPageState extends State<AkunProfilPage> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  final _authController = AuthController();
 
-  late String _defaultBackRoute;
   Map<String, dynamic>? _userData;
   bool _loading = true;
 
@@ -27,17 +24,6 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
   void initState() {
     super.initState();
     _loadUserData();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final extra = GoRouterState.of(context).extra;
-    if (extra != null && extra is Map<String, dynamic> && extra.containsKey('from')) {
-      _defaultBackRoute = extra['from'] as String;
-    } else {
-      _defaultBackRoute = '/${_authController.getRoutePrefix()}/akun';
-    }
   }
 
   Future<void> _loadUserData() async {
@@ -88,9 +74,7 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                                   backgroundColor: Colors.white,
                                   child: IconButton(
                                     icon: const Icon(Icons.arrow_back, color: Color(0xFF245BCA)),
-                                    onPressed: () {
-                                      context.go(_defaultBackRoute);
-                                    },
+                                    onPressed: () { context.pop(); },
                                   ),
                                 ),
                               ),

@@ -32,7 +32,7 @@ class _DesaDataNewsPageState extends State<DesaDataNewsPage> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-                        onPressed: () => context.go('/pd/data'),
+                        onPressed: () => context.pop(),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -110,7 +110,7 @@ class _DesaDataNewsPageState extends State<DesaDataNewsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/pd/data/news/add'),
+        onPressed: () => context.push('/pd/data/news/add'),
         backgroundColor: const Color(0xFF245BCA),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -148,7 +148,7 @@ class _DesaDataNewsPageState extends State<DesaDataNewsPage> {
           children: [
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFF245BCA)),
-              onPressed: () => context.go('/pd/data/news/edit?id=${news.id}'),
+              onPressed: () => context.push('/pd/data/news/edit?id=${news.id}'),
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Color(0xFFCA2424)),
@@ -234,7 +234,7 @@ class _DesaDataNewsPageState extends State<DesaDataNewsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Berita berhasil dihapus')),
     );
-    context.go('/pd/data/news');
+    context.pop();
   }
 }
 

@@ -93,7 +93,7 @@ class _DesaDataAreasFormPageState extends State<DesaDataAreasFormPage> {
             .showSnackBar(const SnackBar(content: Text('Data area berhasil ditambahkan')));
       }
 
-      context.go('/pd/data/areas');
+      context.pop();
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
@@ -115,7 +115,7 @@ class _DesaDataAreasFormPageState extends State<DesaDataAreasFormPage> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-          onPressed: () => context.go('/pd/data/areas'),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           isEdit ? "Ubah Data Area" : "Tambah Data Area",

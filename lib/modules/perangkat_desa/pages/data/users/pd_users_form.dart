@@ -72,7 +72,7 @@ class _DesaDataUsersFormPageState extends State<DesaDataUsersFormPage> {
         );
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('User berhasil diperbarui')));
-        context.go('/pd/data/users');
+        context.pop();
       } else {
         final password = passwordController.text.isEmpty
             ? 'default123'
@@ -99,7 +99,7 @@ class _DesaDataUsersFormPageState extends State<DesaDataUsersFormPage> {
             content: Text('User berhasil ditambahkan! Cek email untuk verifikasi.'),
           ));
 
-          context.go('/pd/data/users');
+          context.pop();
         }
       }
     } catch (e) {
@@ -119,7 +119,7 @@ class _DesaDataUsersFormPageState extends State<DesaDataUsersFormPage> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-          onPressed: () => context.go('/pd/data/users'),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           isEdit ? "Ubah User" : "Tambah User",

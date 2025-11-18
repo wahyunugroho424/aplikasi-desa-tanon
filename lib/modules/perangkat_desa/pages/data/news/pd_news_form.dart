@@ -84,7 +84,7 @@ class _DesaDataNewsFormPageState extends State<DesaDataNewsFormPage> {
 
     try {
       final currentUser = authController.currentUser;
-      String username = 'system';
+      String username = 'Admin';
 
       if (currentUser != null) {
         final userDoc = await FirebaseFirestore.instance
@@ -93,7 +93,7 @@ class _DesaDataNewsFormPageState extends State<DesaDataNewsFormPage> {
             .get();
 
         if (userDoc.exists) {
-          username = userDoc.data()?['username'] ?? 'system';
+          username = userDoc.data()?['username'] ?? 'Admin';
         }
       }
 
@@ -125,7 +125,7 @@ class _DesaDataNewsFormPageState extends State<DesaDataNewsFormPage> {
             const SnackBar(content: Text('Berita berhasil ditambahkan')));
       }
 
-      context.go('/pd/data/news');
+      context.pop();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Terjadi kesalahan: $e')));
@@ -155,7 +155,7 @@ class _DesaDataNewsFormPageState extends State<DesaDataNewsFormPage> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-          onPressed: () => context.go('/pd/data/news'),
+          onPressed: () => context.pop(),
         ),
         title: Text(isEdit ? "Ubah Berita" : "Tambah Berita",
             style: GoogleFonts.poppins(
