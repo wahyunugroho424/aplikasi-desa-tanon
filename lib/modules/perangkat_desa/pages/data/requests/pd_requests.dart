@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/controllers/request_controller.dart';
 import '../../../../../core/controllers/user_controller.dart';
+import '../../../../../core/controllers/area_controller.dart';
 import '../../../../../core/models/request.dart';
 import '../../../../../core/models/user.dart';
+import '../../../../../core/models/area.dart';
 
 class DesaDataRequestsPage extends StatefulWidget {
   const DesaDataRequestsPage({super.key});
@@ -16,8 +18,44 @@ class DesaDataRequestsPage extends StatefulWidget {
 class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
   final requestController = RequestController();
   final userController = UserController();
+  final areaController = AreaController();
 
   String searchKeyword = '';
+  DateTime? startDate;
+  DateTime? endDate;
+
+  String? selectedHamletId;
+  String? selectedRw;
+  String? selectedRt;
+
+  List<Map<String, dynamic>> hamletList = [];
+  List<Map<String, dynamic>> rwList = [];
+  List<Map<String, dynamic>> rtList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHamlets();
+  }
+
+  Future<void> _loadHamlets() async {
+    hamletList = await userController.getHamletList();
+    setState(() {});
+  }
+
+  Future<void> _loadRwList(String hamletName) async {
+    rwList = await userController.getRwList(hamletName);
+    selectedRw = null;
+    selectedRt = null;
+    rtList = [];
+    setState(() {});
+  }
+
+  Future<void> _loadRtList(String hamletName, String rw) async {
+    rtList = await userController.getRtList(hamletName, rw);
+    selectedRt = null;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,25 +69,42 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
               child: StreamBuilder<List<Request>>(
                 stream: requestController.getRequestsStream(),
                 builder: (context, snap) {
-                  if (!snap.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  List<Request> list = snap.data!;
+                  if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                  final requests = snap.data!;
 
                   return StreamBuilder<List<User>>(
                     stream: userController.getUsersStream(),
                     builder: (context, userSnap) {
                       if (!userSnap.hasData) return const Center(child: CircularProgressIndicator());
-
                       final users = {for (var u in userSnap.data!) u.id: u};
 
-                      final filtered = list.where((req) {
-                        final userName = users[req.userId]?.username ?? "-";
-                        return userName.toLowerCase().contains(searchKeyword.toLowerCase());
-                      }).toList();
+                      return StreamBuilder<List<Area>>(
+                        stream: areaController.getAreasStream(),
+                        builder: (context, areaSnap) {
+                          if (!areaSnap.hasData) return const Center(child: CircularProgressIndicator());
+                          final areas = {for (var a in areaSnap.data!) a.id: a};
 
-                      return _buildRequestTable(filtered, users);
+                          final filtered = requests.where((req) {
+                            final user = users[req.userId];
+                            final area = areas[req.areaId];
+                            if (user == null || area == null) return false;
+
+                            final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+
+                            final matchesDate = (startDate == null || endDate == null) ||
+                                (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                                 req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
+
+                            final matchesHamlet = selectedHamletId == null || req.areaId == selectedHamletId;
+                            final matchesRw = selectedRw == null || area.rw == selectedRw;
+                            final matchesRt = selectedRt == null || area.rt == selectedRt;
+
+                            return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
+                          }).toList();
+
+                          return _buildRequestTable(filtered, users, areas);
+                        },
+                      );
                     },
                   );
                 },
@@ -62,15 +117,19 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
   }
 
   Widget _buildHeader() {
+    const borderColor = Color(0xFF245BCA);
+    const textColor = Color(0xFF00194A);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF00194A)),
-                onPressed: () => context.go('/pd/data'),
+                icon: const Icon(Icons.arrow_back, color: textColor),
+                onPressed: () => context.pop(),
               ),
               const SizedBox(width: 8),
               Text(
@@ -78,20 +137,238 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF00194A),
+                  color: textColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          TextField(
-            onChanged: (value) => setState(() => searchKeyword = value),
-            decoration: InputDecoration(
-              hintText: 'Cari berdasar nama pengaju',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+          const SizedBox(height: 8),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            color: Colors.white,
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          onChanged: (value) => setState(() => searchKeyword = value),
+                          style: const TextStyle(color: textColor),
+                          decoration: InputDecoration(
+                            hintText: 'Cari nama pengaju...',
+                            hintStyle: const TextStyle(color: textColor),
+                            prefixIcon: const Icon(Icons.search, color: borderColor),
+                            filled: false,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(color: borderColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(color: borderColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(color: borderColor, width: 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final picked = await showDateRangePicker(
+                                context: context,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime.now(),
+                                initialDateRange: (startDate != null && endDate != null)
+                                    ? DateTimeRange(start: startDate!, end: endDate!)
+                                    : null,
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  startDate = picked.start;
+                                  endDate = picked.end;
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.calendar_today, size: 18, color: borderColor),
+                            label: Text(
+                              (startDate == null || endDate == null)
+                                  ? "All"
+                                  : "${startDate!.day}/${startDate!.month}/${startDate!.year} - ${endDate!.day}/${endDate!.month}/${endDate!.year}",
+                              style: const TextStyle(fontSize: 11, color: textColor),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              side: const BorderSide(color: borderColor),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      if (startDate != null && endDate != null)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 20, color: borderColor),
+                          onPressed: () => setState(() {
+                            startDate = null;
+                            endDate = null;
+                          }),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Dusun", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+                            const SizedBox(height: 4),
+                            DropdownButtonFormField<String>(
+                              value: selectedHamletId,
+                              items: [
+                                const DropdownMenuItem(value: null, child: Text("All")),
+                                ...hamletList.map<DropdownMenuItem<String>>((h) => DropdownMenuItem<String>(
+                                      value: h['id'] as String,
+                                      child: Text(h['hamlet'] ?? '-', style: const TextStyle(color: textColor)),
+                                    )),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  selectedHamletId = value;
+                                  selectedRw = null;
+                                  selectedRt = null;
+                                  rwList = [];
+                                  rtList = [];
+                                });
+                                if (value != null) {
+                                  final hamletName = hamletList.firstWhere((h) => h['id'] == value)['hamlet'];
+                                  await _loadRwList(hamletName);
+                                }
+                              },
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor, width: 2),
+                                ),
+                                filled: false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("RW", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+                            const SizedBox(height: 4),
+                            DropdownButtonFormField<String>(
+                              value: selectedRw,
+                              items: [
+                                const DropdownMenuItem(value: null, child: Text("All")),
+                                ...rwList.map<DropdownMenuItem<String>>((r) => DropdownMenuItem<String>(
+                                      value: r['rw'] as String,
+                                      child: Text(r['rw'] ?? '-', style: const TextStyle(color: textColor)),
+                                    )),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  selectedRw = value;
+                                  selectedRt = null;
+                                  rtList = [];
+                                });
+                                if (value != null && selectedHamletId != null) {
+                                  final hamletName = hamletList.firstWhere((h) => h['id'] == selectedHamletId)['hamlet'];
+                                  await _loadRtList(hamletName, value);
+                                }
+                              },
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor, width: 2),
+                                ),
+                                filled: false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("RT", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+                            const SizedBox(height: 4),
+                            DropdownButtonFormField<String>(
+                              value: selectedRt,
+                              items: [
+                                const DropdownMenuItem(value: null, child: Text("All")),
+                                ...rtList.map<DropdownMenuItem<String>>((r) => DropdownMenuItem<String>(
+                                      value: r['rt'] as String,
+                                      child: Text(r['rt'] ?? '-', style: const TextStyle(color: textColor)),
+                                    )),
+                              ],
+                              onChanged: (value) => setState(() => selectedRt = value),
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: borderColor, width: 2),
+                                ),
+                                filled: false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -99,7 +376,21 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
     );
   }
 
-  Widget _buildRequestTable(List<Request> list, Map<String, User> users) {
+  Widget _buildRequestTable(List<Request> list, Map<String, User> users, Map<String, Area> areas) {
+    Color getStatusColor(String status) {
+      switch (status.toLowerCase()) {
+        case 'dibatalkan':
+        case 'ditolak':
+          return Colors.red;
+        case 'diproses':
+          return Colors.blue;
+        case 'disetujui':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -117,13 +408,12 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
         rows: List.generate(list.length, (index) {
           final item = list[index];
           final user = users[item.userId];
+          final area = areas[item.areaId];
 
           return DataRow(
             cells: [
               DataCell(Text("${index + 1}")),
-              DataCell(Text(
-                "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
-              )),
+              DataCell(Text("${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}")),
               DataCell(
                 FutureBuilder<String>(
                   future: requestController.getServiceName(item.serviceId),
@@ -134,18 +424,23 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                 ),
               ),
               DataCell(Text(user?.username ?? "-")),
+              DataCell(Text(area != null ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}" : "-")),
               DataCell(
-                FutureBuilder<String>(
-                  future: userController.getFullAddress(user?.areaId ?? ''),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Text("-");
-                    }
-                    return Text(snapshot.data!);
-                  },
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(item.status).withOpacity(0.2),
+                    border: Border.all(color: getStatusColor(item.status)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    item.status,
+                    style: TextStyle(
+                      color: getStatusColor(item.status),
+                    ),
+                  ),
                 ),
               ),
-              DataCell(Text(item.status)),
               DataCell(
                 Row(
                   children: [

@@ -55,7 +55,6 @@ class _DesaDataRequestsDetailPageState extends State<DesaDataRequestsDetailPage>
   Widget _buildContent(Request req, User user) {
     return Column(
       children: [
-        // Header
         Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: const BoxDecoration(
@@ -94,7 +93,6 @@ class _DesaDataRequestsDetailPageState extends State<DesaDataRequestsDetailPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 
-                // CARD UTAMA DETAIL
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -157,7 +155,6 @@ class _DesaDataRequestsDetailPageState extends State<DesaDataRequestsDetailPage>
                   ),
                   const SizedBox(height: 12),
 
-                  // CARD PREVIEW PDF
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
