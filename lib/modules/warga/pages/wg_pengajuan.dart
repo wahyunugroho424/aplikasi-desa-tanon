@@ -186,7 +186,7 @@ class _WargaPengajuanPageState extends State<WargaPengajuanPage> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/wg/pengajuan/add'),
+        onPressed: () => context.push('/wg/pengajuan/add'),
         backgroundColor: const Color(0xFF245BCA),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -194,55 +194,62 @@ class _WargaPengajuanPageState extends State<WargaPengajuanPage> {
   }
 
   Widget _buildPengajuanCard(Request item) {
-    return GestureDetector(
-      onTap: () {
-        context.push(
-          '/wg/pengajuan/detail',
-          extra: {
-            'id': item.id,
+    return FutureBuilder<String>(
+      future: _requestController.getServiceName(item.serviceId),
+      builder: (context, snapshot) {
+        final serviceName = snapshot.data ?? 'Memuat...';
+
+        return GestureDetector(
+          onTap: () {
+            context.push(
+              '/wg/pengajuan/detail',
+              extra: {
+                'id': item.id,
+              },
+            );
           },
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFCEDDFF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF00194A), width: 1.5),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/list_services.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              title: Text(
+                serviceName,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF00194A),
+                ),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  item.status,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: _statusColor(item.status),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFCEDDFF),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF00194A), width: 1.5),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage('assets/images/list_services.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          title: Text(
-            item.serviceName ?? '-',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF00194A),
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Text(
-              item.status,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: _statusColor(item.status),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 

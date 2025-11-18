@@ -9,7 +9,6 @@ class Request {
   final String? notes;
   final String? fileUrl;
   final DateTime createdAt;
-  final String? serviceName;
 
   Request({
     required this.id,
@@ -22,7 +21,6 @@ class Request {
     this.notes,
     this.fileUrl,
     required this.createdAt,
-    this.serviceName,
   });
 
   factory Request.fromMap(Map<String, dynamic> data, [String? id]) {
@@ -61,33 +59,5 @@ class Request {
       'fileUrl': fileUrl,
       'createdAt': createdAt.toIso8601String(),
     };
-  }
-
-  Request copyWith({
-    String? id,
-    String? userId,
-    String? serviceId,
-    String? areaId,
-    String? status,
-    String? verifiedBy,
-    DateTime? verifiedAt,
-    String? notes,
-    String? fileUrl,
-    DateTime? createdAt,
-    String? serviceName,
-  }) {
-    return Request(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      serviceId: serviceId ?? this.serviceId,
-      areaId: areaId ?? this.areaId,
-      status: status ?? this.status,
-      verifiedBy: verifiedBy ?? this.verifiedBy,
-      verifiedAt: verifiedAt ?? this.verifiedAt,
-      notes: notes ?? this.notes,
-      fileUrl: fileUrl ?? this.fileUrl,
-      createdAt: createdAt ?? this.createdAt,
-      serviceName: serviceName ?? this.serviceName,
-    );
   }
 }

@@ -17,6 +17,7 @@ class _WargaPengajuanDetailPageState extends State<WargaPengajuanDetailPage> {
   final _controller = RequestController();
   Request? _request;
   bool _loading = true;
+  String _serviceName = '-';
 
   @override
   void initState() {
@@ -28,8 +29,13 @@ class _WargaPengajuanDetailPageState extends State<WargaPengajuanDetailPage> {
     final id = widget.data['id'];
     if (id != null) {
       final req = await _controller.getRequestById(id);
+      String name = '-';
+      if (req != null) {
+        name = await _controller.getServiceName(req.serviceId);
+      }
       setState(() {
         _request = req;
+        _serviceName = name;
         _loading = false;
       });
     } else {
@@ -54,7 +60,7 @@ class _WargaPengajuanDetailPageState extends State<WargaPengajuanDetailPage> {
       );
     }
 
-    final requestName = req.serviceName ?? '-';
+    final requestName = _serviceName;
     final status = req.status;
     final tanggalPengajuan = DateFormat('dd MMMM yyyy', 'id_ID').format(req.createdAt);
     final tanggalVerifikasi = req.verifiedAt != null
@@ -288,7 +294,7 @@ class _WargaPengajuanDetailPageState extends State<WargaPengajuanDetailPage> {
                                                         ),
                                                       ),
                                                     );
-                                                    context.go('/wg/pengajuan');
+                                                    context.pop();
                                                   }
                                                 },
                                                 child: Text('Batalkan Pengajuan',
@@ -338,7 +344,7 @@ class _WargaPengajuanDetailPageState extends State<WargaPengajuanDetailPage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => context.go('/wg/pengajuan'),
+                  onPressed: () => context.pop(),
                 ),
                 Text('Detail Riwayat',
                     style: GoogleFonts.poppins(
