@@ -27,6 +27,38 @@ class RequestController {
     });
   }
 
+  // 🔹 Ambil semua pengajuan yang sudah diajukan (berdasarkan area RT)
+    Stream<List<Request>> getAllRequestsByArea(String areaId) {
+      return _dbRef.onValue.asyncMap((event) async {
+        final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
+
+        // Ambil semua request dari area tertentu
+        final list = await Future.wait(data.entries.map((e) async {
+          final req = Request.fromMap(Map<String, dynamic>.from(e.value), e.key);
+
+          String? serviceName;
+          if (req.serviceId.isNotEmpty) {
+            final serviceDoc =
+                await _firestore.collection('services').doc(req.serviceId).get();
+            if (serviceDoc.exists) {
+              serviceName = serviceDoc.data()?['name'];
+            }
+          }
+
+          return req.copyWith(serviceName: serviceName ?? '-');
+        }));
+
+        // 🔹 Filter berdasarkan area ID RT yang sedang login
+        final filtered = list.where((r) => r.areaId == areaId).toList();
+
+        // 🔹 Urutkan dari yang terbaru
+        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        return filtered;
+      });
+    }
+
+
   Stream<List<Request>> getRequestsByUser(String userId) {
     return getRequestsStream().map(
       (list) => list.where((r) => r.userId == userId).toList(),

@@ -202,4 +202,21 @@ class AuthController {
   if (role == 'RT') return 'rt';
   return 'wg'; 
 }
+
+Future<Map<String, dynamic>> getCurrentUserData() async {
+  final user = currentUser;
+  if (user == null) return {
+  'username': 'RT',
+    'areaId': '',
+  };
+
+  final doc = await _firestore.collection('users').doc(user.uid).get();
+  final data = doc.data() ?? {};
+  return {
+    'username': data['username'] ?? 'RT User',
+    'areaId': data['areaId'] ?? '',
+  };
+}
+
+
 }

@@ -42,9 +42,24 @@ import 'modules/warga/pages/wg_pengajuan_detail.dart';
 // === RT ===
 import 'modules/rt/rt_main.dart';
 import 'modules/rt/pages/beranda_rt.dart';
+import 'modules/rt/pages/pengajuan_surat/pengajuan_surat.dart';
+import 'modules/rt/pages/pengajuan_surat/detail_pengajuan.dart';
+import 'modules/rt/pages/halaman_aprrove_surat/detail_data_pengajuan.dart';
+import 'modules/rt/pages/laporan_surat_disetujui/laporan_pengajuan_disetujui.dart';
+import 'modules/rt/pages/laporan_surat_disetujui/detail_pengajuan_disetujui.dart';
+import 'modules/rt/pages/data_surat/detail_data_pengajuan_disetujui.dart';
+import 'modules/rt/pages/laporan_surat_ditolak/laporan_pengajuan_ditolak.dart';
+import 'modules/rt/pages/laporan_surat_ditolak/detail_pengajuan_ditolak.dart';
+import 'modules/rt/pages/data_surat/detail_data_pengajuan_ditolak.dart';
+import 'modules/rt/pages/profil_rt.dart';
 
+// import 'modules/rt/pages/laporan_rt.dart'; // ✅ tambahkan ini
+// import 'modules/rt/pages/akun_rt.dart'; // ✅ tambahkan ini
+// import 'modules/rt/pages/berita_rt.dart';
+// import 'modules/rt/pages/berita_rt_detail.dart';
 
 final _authController = AuthController();
+
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/auth/login',
@@ -136,7 +151,79 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state, child) => RTMain(child: child),
       routes: [
         GoRoute(path: '/rt/beranda', builder: (_, __) => const BerandaRT()),
+
+        // ✅ Halaman pengajuan RT (klik tab pengajuan → tampilkan ini)
+        GoRoute(path: '/rt/pengajuan', builder: (_, __) => const PengajuanSurat()),
+        GoRoute(
+          path: '/rt/detail_pengajuan',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final serviceName = extra['serviceName'] as String? ?? '-';
+            final areaId = extra['areaId'] as String? ?? '-';
+            return DetailPengajuan(serviceName: serviceName, areaId: areaId);
+          },
+        ),
+        GoRoute(
+          path: '/rt/detail_disetujui',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final serviceName = extra['serviceName'] as String? ?? '-';
+            final areaId = extra['areaId'] as String? ?? '-';
+            return DetailDisetujuiPage(
+              serviceName: serviceName,
+              areaId: areaId,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/rt/detail_ditolak',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final serviceName = extra['serviceName'] as String? ?? '-';
+            final areaId = extra['areaId'] as String? ?? '-';
+            return DetailDitolakPage(
+              serviceName: serviceName,
+              areaId: areaId,
+            );
+          },
+        ),
+
+
+        GoRoute(
+          path: '/rt/detail_data/pengajuan',
+          builder: (context, state) {
+            final requestId = state.uri.queryParameters['id'] ?? '';
+            return DetailDataPengajuanPage(requestId: requestId);
+          },
+        ),
+        GoRoute(
+          path: '/rt/detail_data/pengajuan/disetujui',
+          builder: (context, state) {
+            final requestId = state.uri.queryParameters['id'] ?? '';
+            return DetailDataPengajuanDisetujuiPage(requestId: requestId);
+          },
+        ),
+        GoRoute(
+          path: '/rt/detail_data/pengajuan/ditolak',
+          builder: (context, state) {
+            final requestId = state.uri.queryParameters['id'] ?? '';
+            return DetailDataPengajuanDitolakPage(requestId: requestId);
+          },
+        ),
+ 
+        // halaman laporan RT 
+        GoRoute(path: '/rt/laporan',builder: (_, __) => const LaporanPengajuanDisetujui(),),
+        GoRoute(path: '/rt/laporan/ditolak',builder: (_, __) => const LaporanPengajuanDitolak(),),
+
+        // /halaman akun RT 
+        GoRoute(path: '/rt/akun',builder: (_, __) => AkunRT(routePrefix: 'rt')),
+        GoRoute(path: '/rt/halaman_akun',builder: (context, state) => AkunProfilPage(routePrefix: 'rt')),
+        GoRoute(path: '/rt/akun/profil/form',builder: (_, __) => const AkunProfilFormPage(routePrefix: 'rt')),
+        GoRoute(path: '/rt/akun/password',builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'rt')),
+
+
         GoRoute(path: '/rt/berita', builder: (_, __) => BeritaRTPage()),
+
         GoRoute(
           path: '/rt/berita/detail',
           builder: (context, state) {
@@ -145,6 +232,8 @@ final GoRouter appRouter = GoRouter(
             return BeritaRTDetailPage(newsId: newsId);
           },
         ),
+
+
       ],
     ),
   ],

@@ -12,18 +12,22 @@ class RTMain extends StatefulWidget {
 class _RTMainState extends State<RTMain> {
   int _selectedIndex = 0;
 
+  // 🔹 Daftar route sesuai urutan BottomNavigationBar
   final List<String> _routes = [
     '/rt/beranda',
-    '/rt/pengajuan',
+    '/rt/pengajuan', // ← ini akan menampilkan PengajuanSurat
     '/rt/laporan',
     '/rt/akun',
   ];
 
+  // 🔹 Saat tab diklik
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
+    // Navigasi ke rute berdasarkan index
     context.go(_routes[index]);
   }
 
+  // 🔹 Deteksi halaman aktif berdasarkan path sekarang
   int _calculateSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
 
@@ -47,7 +51,9 @@ class _RTMainState extends State<RTMain> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: const Color.fromARGB(255, 36, 91, 202),
+        selectedItemColor: const Color(0xFF245BCA),
+        unselectedItemColor: Colors.grey[600],
+        showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_rounded),
