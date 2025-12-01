@@ -25,15 +25,16 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
   List<Map<String, dynamic>> services = [];
 
   String areaId = '';
-
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController birthPlaceDateController = TextEditingController();
-  final TextEditingController religionController = TextEditingController();
-  final TextEditingController nationalityController = TextEditingController();
-  final TextEditingController occupationController = TextEditingController();
-  final TextEditingController maritalStatusController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  Map<String, dynamic> userData = {
+    "username": "",
+    "birthPlaceDate": "",
+    "religion": "",
+    "nationality": "",
+    "occupation": "",
+    "maritalStatus": "",
+    "address": "",
+    "phone": "",
+  };
 
   @override
   void initState() {
@@ -65,26 +66,58 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
     final data = doc.data()!;
     areaId = data['areaId'] ?? '';
 
-    // Ambil alamat lengkap dari areaId
     String fullAddress = '-';
     if (areaId.isNotEmpty) {
       fullAddress = await _userController.getFullAddress(areaId);
     }
 
     setState(() {
-      usernameController.text = data['username'] ?? '';
-      birthPlaceDateController.text = data['birthPlaceDate'] ?? '';
-      religionController.text = data['religion'] ?? '';
-      nationalityController.text = data['nationality'] ?? '';
-      occupationController.text = data['occupation'] ?? '';
-      maritalStatusController.text = data['maritalStatus'] ?? '';
-      addressController.text = fullAddress;
-      phoneController.text = data['phone'] ?? '';
+      userData = {
+        "username": data['username'] ?? '',
+        "birthPlaceDate": data['birthPlaceDate'] ?? '',
+        "religion": data['religion'] ?? '',
+        "nationality": data['nationality'] ?? '',
+        "occupation": data['occupation'] ?? '',
+        "maritalStatus": data['maritalStatus'] ?? '',
+        "address": fullAddress,
+        "phone": data['phone'] ?? '',
+      };
     });
   }
 
+  Future<void> _confirmBeforeSubmit() async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Pengajuan"),
+          content: const Text("Apakah Anda yakin ingin membuat pengajuan ini?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _submitRequest();
+              },
+              child: const Text("Ya, Lanjutkan"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _submitRequest() async {
+    if (userData.values.any((v) => v.toString().isEmpty)) {
+      _showIncompleteProfileDialog();
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
+
     if (selectedServiceId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Pilih keperluan terlebih dahulu")),
@@ -112,17 +145,31 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
     }
   }
 
-  @override
-  void dispose() {
-    usernameController.dispose();
-    birthPlaceDateController.dispose();
-    religionController.dispose();
-    nationalityController.dispose();
-    occupationController.dispose();
-    maritalStatusController.dispose();
-    addressController.dispose();
-    phoneController.dispose();
-    super.dispose();
+  void _showIncompleteProfileDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Profil Belum Lengkap"),
+          content: const Text("Silakan lengkapi profil terlebih dahulu sebelum membuat pengajuan."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/wg/akun/profil').then((_) {
+                  _loadUserData();
+                });
+              },
+              child: const Text("Lengkapi Profil"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -164,7 +211,7 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
                   labelText: 'Keperluan',
                   border: OutlineInputBorder(),
                 ),
-                items: services.map<DropdownMenuItem<String>>((service) {
+                items: services.map((service) {
                   return DropdownMenuItem<String>(
                     value: service['id'],
                     child: Text(service['name']),
@@ -173,49 +220,14 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
                 onChanged: (value) {
                   setState(() {
                     selectedServiceId = value;
-                    selectedRequirements = services
-                        .firstWhere((s) => s['id'] == value)['requirements']
-                        .cast<String>();
+                    selectedRequirements =
+                        services.firstWhere((s) => s['id'] == value)['requirements'];
                   });
                 },
               ),
               const SizedBox(height: 12),
-              if (selectedRequirements.isNotEmpty) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "PERSYARATAN YANG DIPERLUKAN:",
-                        style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                            color: const Color(0xFF00194A)),
-                      ),
-                      const SizedBox(height: 6),
-                      ...selectedRequirements.map((req) => Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("• ", style: TextStyle(fontSize: 12)),
-                              Expanded(
-                                child: Text(req,
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: Colors.grey[700])),
-                              ),
-                            ],
-                          )),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
+              if (selectedRequirements.isNotEmpty) _buildRequirementsBox(),
+              const SizedBox(height: 20),
               Text(
                 "DATA PRIBADI PENGAJU",
                 style: GoogleFonts.poppins(
@@ -224,21 +236,7 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
                     color: const Color(0xFF00194A)),
               ),
               const SizedBox(height: 8),
-              _buildTextField(usernameController, 'Nama Lengkap'),
-              const SizedBox(height: 10),
-              _buildTextField(birthPlaceDateController, 'Tempat / Tanggal Lahir'),
-              const SizedBox(height: 10),
-              _buildTextField(religionController, 'Agama'),
-              const SizedBox(height: 10),
-              _buildTextField(nationalityController, 'Kewarganegaraan'),
-              const SizedBox(height: 10),
-              _buildTextField(occupationController, 'Pekerjaan'),
-              const SizedBox(height: 10),
-              _buildTextField(maritalStatusController, 'Status Perkawinan'),
-              const SizedBox(height: 10),
-              _buildTextField(addressController, 'Alamat'),
-              const SizedBox(height: 10),
-              _buildTextField(phoneController, 'Nomor Telepon'),
+              _buildProfileDisplay(),
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -247,7 +245,7 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _submitRequest,
+                onPressed: _confirmBeforeSubmit,
                 child: Text(
                   'Buat Pengajuan',
                   style: GoogleFonts.poppins(
@@ -263,14 +261,93 @@ class _WargaPengajuanFormPageState extends State<WargaPengajuanFormPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return TextFormField(
-      controller: controller,
-      validator: (value) =>
-          (value == null || value.trim().isEmpty) ? 'Kolom ini wajib diisi' : null,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+  Widget _buildRequirementsBox() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "PERSYARATAN YANG DIPERLUKAN:",
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: const Color(0xFF00194A)),
+          ),
+          const SizedBox(height: 6),
+          ...selectedRequirements.map((req) => Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("• ", style: TextStyle(fontSize: 12)),
+                  Expanded(
+                    child: Text(
+                      req,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ],
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileDisplay() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          _infoRow("Nama Lengkap", userData["username"]),
+          _infoRow("Tempat / Tanggal Lahir", userData["birthPlaceDate"]),
+          _infoRow("Agama", userData["religion"]),
+          _infoRow("Kewarganegaraan", userData["nationality"]),
+          _infoRow("Pekerjaan", userData["occupation"]),
+          _infoRow("Status Perkawinan", userData["maritalStatus"]),
+          _infoRow("Alamat", userData["address"]),
+          _infoRow("Nomor Telepon", userData["phone"]),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF00194A),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value.isEmpty ? "-" : value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
