@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/controllers/auth_controller.dart';
 import '../../../../../core/controllers/user_controller.dart';
+import '../../../../../core/models/user.dart';
 
 class AkunPage extends StatelessWidget {
   final String routePrefix;
@@ -72,7 +73,7 @@ class AkunPage extends StatelessWidget {
                               builder: (context, snapshot) {
                                 final name = snapshot.data ?? 'User';
                                 return Text(
-                                  name, // nama di atas
+                                  name,
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -81,13 +82,19 @@ class AkunPage extends StatelessWidget {
                                 );
                               },
                             ),
-                            subtitle: Text(
-                              _authController.currentUserRole,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey[800],
-                              ),
+                            subtitle: FutureBuilder<User?>(
+                              future: UserController().getUserById(AuthController().currentUser!.uid),
+                              builder: (context, snapshot) {
+                                final role = snapshot.data?.role ?? '-';
+                                return Text(
+                                  role,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey[800],
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),

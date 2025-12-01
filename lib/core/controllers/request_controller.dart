@@ -183,4 +183,14 @@ class RequestController {
   Stream<int> getTotalRequests() {
     return getRequestsStream().map((list) => list.length);
   }
+
+  Stream<int> getTotalByStatus(String userId, String status) {
+    return getRequestsByUser(userId).map(
+      (list) => list.where((r) => r.status == status).length,
+    );
+  }
+
+  Stream<int> getTotalPengajuan(String userId) {
+    return getRequestsByUser(userId).map((list) => list.length);
+  }
 }

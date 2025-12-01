@@ -5,12 +5,14 @@ import '../../../../../core/controllers/user_controller.dart';
 import '../../../../../core/controllers/service_controller.dart';
 import '../../../../../core/controllers/news_controller.dart';
 import '../../../../../core/controllers/auth_controller.dart';
+import '../../../../../core/controllers/request_controller.dart';
 import '../../../../../core/models/news.dart';
 
 class WargaBerandaPage extends StatelessWidget {
   final userController = UserController();
   final newsController = NewsController();
   final serviceController = ServiceController();
+  final requestController = RequestController();
   WargaBerandaPage({super.key});
 
   @override
@@ -107,6 +109,9 @@ class WargaBerandaPage extends StatelessWidget {
   }
 
   Widget _buildMainCard(BuildContext context) {
+    final userId = AuthController().currentUser!.uid;
+    final requestController = RequestController();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -126,16 +131,16 @@ class WargaBerandaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: StreamBuilder<int>(
-                  stream: userController.getTotalUsers(),
+                  stream: requestController.getTotalPengajuan(userId),
                   builder: (context, snapshot) {
                     final total = snapshot.data ?? 0;
                     return _buildSmallCard(
                       context: context,
-                      iconPath: 'assets/images/ic_users.png',
-                      title: 'Pengguna',
+                      iconPath: 'assets/images/ic_requests.png',
+                      title: 'Pengajuan',
                       total: total,
                       color: const Color(0xFFCEDDFF),
-                      route: '/pd/data/users',
+                      route: '/wg/pengajuan',
                     );
                   },
                 ),
@@ -143,48 +148,56 @@ class WargaBerandaPage extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: StreamBuilder<int>(
-                  stream: serviceController.getTotalServices(),
+                  stream: requestController.getTotalByStatus(userId, 'Diproses'),
                   builder: (context, snapshot) {
                     final total = snapshot.data ?? 0;
                     return _buildSmallCard(
                       context: context,
-                      iconPath: 'assets/images/ic_services.png',
-                      title: 'Keperluan',
+                      iconPath: 'assets/images/ic_requests.png',
+                      title: 'Diproses',
                       total: total,
                       color: const Color(0xFFCEDDFF),
-                      route: '/pd/data/services',
+                      route: '/wg/pengajuan',
                     );
                   },
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 10),
+
           Row(
             children: [
               Expanded(
-                child: _buildSmallCard(
-                  context: context,
-                  iconPath: 'assets/images/ic_requests.png',
-                  title: 'Pengajuan',
-                  total: 12,
-                  color: const Color(0xFFCEDDFF),
-                  route: '/data/requests',
+                child: StreamBuilder<int>(
+                  stream: requestController.getTotalByStatus(userId, 'Disetujui'),
+                  builder: (context, snapshot) {
+                    final total = snapshot.data ?? 0;
+                    return _buildSmallCard(
+                      context: context,
+                      iconPath: 'assets/images/ic_req_acc.png',
+                      title: 'Disetujui',
+                      total: total,
+                      color: const Color(0xFFCEDDFF),
+                      route: '/wg/pengajuan',
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: StreamBuilder<int>(
-                  stream: newsController.getTotalNews(),
+                  stream: requestController.getTotalByStatus(userId, 'Ditolak'),
                   builder: (context, snapshot) {
                     final total = snapshot.data ?? 0;
                     return _buildSmallCard(
                       context: context,
-                      iconPath: 'assets/images/ic_news.png',
-                      title: 'Berita',
+                      iconPath: 'assets/images/ic_req_rej.png',
+                      title: 'Ditolak',
                       total: total,
                       color: const Color(0xFFCEDDFF),
-                      route: '/pd/data/news',
+                      route: '/wg/pengajuan',
                     );
                   },
                 ),
