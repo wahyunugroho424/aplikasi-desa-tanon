@@ -7,6 +7,8 @@ import '../../../../../core/controllers/area_controller.dart';
 import '../../../../../core/models/request.dart';
 import '../../../../../core/models/user.dart';
 import '../../../../../core/models/area.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class DesaDataRequestsPage extends StatefulWidget {
   const DesaDataRequestsPage({super.key});
@@ -66,48 +68,89 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
           children: [
             _buildHeader(),
             Expanded(
-              child: StreamBuilder<List<Request>>(
-                stream: requestController.getRequestsStream(),
-                builder: (context, snap) {
-                  if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-                  final requests = snap.data!;
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: StreamBuilder<List<Request>>(
+                        stream: requestController.getRequestsStream(),
+                        builder: (context, snap) {
+                          if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                          final requests = snap.data!;
 
-                  return StreamBuilder<List<User>>(
-                    stream: userController.getUsersStream(),
-                    builder: (context, userSnap) {
-                      if (!userSnap.hasData) return const Center(child: CircularProgressIndicator());
-                      final users = {for (var u in userSnap.data!) u.id: u};
+                          return StreamBuilder<List<User>>(
+                            stream: userController.getUsersStream(),
+                            builder: (context, userSnap) {
+                              if (!userSnap.hasData) return const Center(child: CircularProgressIndicator());
+                              final users = {for (var u in userSnap.data!) u.id: u};
 
-                      return StreamBuilder<List<Area>>(
-                        stream: areaController.getAreasStream(),
-                        builder: (context, areaSnap) {
-                          if (!areaSnap.hasData) return const Center(child: CircularProgressIndicator());
-                          final areas = {for (var a in areaSnap.data!) a.id: a};
+                              return StreamBuilder<List<Area>>(
+                                stream: areaController.getAreasStream(),
+                                builder: (context, areaSnap) {
+                                  if (!areaSnap.hasData) return const Center(child: CircularProgressIndicator());
+                                  final areas = {for (var a in areaSnap.data!) a.id: a};
 
-                          final filtered = requests.where((req) {
-                            final user = users[req.userId];
-                            final area = areas[req.areaId];
-                            if (user == null || area == null) return false;
+                                  final filtered = requests.where((req) {
+                                    final user = users[req.userId];
+                                    final area = areas[req.areaId];
+                                    if (user == null || area == null) return false;
 
-                            final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+                                    final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+                                    final matchesDate = (startDate == null || endDate == null) ||
+                                        (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                                            req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
+                                    final matchesHamlet = selectedHamletId == null || area.hamlet == selectedHamletId;
+                                    final matchesRw = selectedRw == null || area.rw == selectedRw;
+                                    final matchesRt = selectedRt == null || area.rt == selectedRt;
 
-                            final matchesDate = (startDate == null || endDate == null) ||
-                                (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
-                                 req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
+                                    return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
+                                  }).toList();
 
-                            final matchesHamlet = selectedHamletId == null || req.areaId == selectedHamletId;
-                            final matchesRw = selectedRw == null || area.rw == selectedRw;
-                            final matchesRt = selectedRt == null || area.rt == selectedRt;
-
-                            return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
-                          }).toList();
-
-                          return _buildRequestTable(filtered, users, areas);
+                                  return _buildRequestTable(filtered, users, areas);
+                                },
+                              );
+                            },
+                          );
                         },
-                      );
-                    },
-                  );
-                },
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      onPressed: () async {
+                        final requests = await requestController.getRequestsStream().first;
+                        final usersList = await userController.getUsersStream().first;
+                        final areasList = await areaController.getAreasStream().first;
+                        final users = {for (var u in usersList) u.id: u};
+                        final areas = {for (var a in areasList) a.id: a};
+
+                        final filtered = requests.where((req) {
+                          final user = users[req.userId];
+                          final area = areas[req.areaId];
+                          if (user == null || area == null) return false;
+
+                          final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+                          final matchesDate = (startDate == null || endDate == null) ||
+                              (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                                  req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
+                          final matchesHamlet = selectedHamletId == null || area.hamlet == selectedHamletId;
+                          final matchesRw = selectedRw == null || area.rw == selectedRw;
+                          final matchesRt = selectedRt == null || area.rt == selectedRt;
+
+                          return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
+                        }).toList();
+
+                        _exportPdf(filtered, users, areas);
+                      },
+                      backgroundColor: const Color(0xFF245BCA),
+                      child: const Icon(Icons.picture_as_pdf, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -117,6 +160,10 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
   }
 
   Widget _buildHeader() {
+    final uniqueHamlets = hamletList.map((h) => h['hamlet']).toSet().toList();
+    final uniqueRwList = rwList.map((r) => r['rw']).toSet().toList();
+    final uniqueRtList = rtList.map((r) => r['rt']).toSet().toList();
+
     const borderColor = Color(0xFF245BCA);
     const textColor = Color(0xFF00194A);
 
@@ -241,10 +288,10 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                               value: selectedHamletId,
                               items: [
                                 const DropdownMenuItem(value: null, child: Text("All")),
-                                ...hamletList.map<DropdownMenuItem<String>>((h) => DropdownMenuItem<String>(
-                                      value: h['id'] as String,
-                                      child: Text(h['hamlet'] ?? '-', style: const TextStyle(color: textColor)),
-                                    )),
+                                ...uniqueHamlets.map((h) => DropdownMenuItem<String>(
+                                  value: h,
+                                  child: Text(h, style: const TextStyle(color: Colors.black)),
+                                )),
                               ],
                               onChanged: (value) async {
                                 setState(() {
@@ -255,8 +302,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                                   rtList = [];
                                 });
                                 if (value != null) {
-                                  final hamletName = hamletList.firstWhere((h) => h['id'] == value)['hamlet'];
-                                  await _loadRwList(hamletName);
+                                  await _loadRwList(value);
                                 }
                               },
                               decoration: InputDecoration(
@@ -291,10 +337,10 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                               value: selectedRw,
                               items: [
                                 const DropdownMenuItem(value: null, child: Text("All")),
-                                ...rwList.map<DropdownMenuItem<String>>((r) => DropdownMenuItem<String>(
-                                      value: r['rw'] as String,
-                                      child: Text(r['rw'] ?? '-', style: const TextStyle(color: textColor)),
-                                    )),
+                                ...uniqueRwList.map((rw) => DropdownMenuItem<String>(
+                                  value: rw,
+                                  child: Text(rw, style: const TextStyle(color: Colors.black)),
+                                )),
                               ],
                               onChanged: (value) async {
                                 setState(() {
@@ -303,8 +349,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                                   rtList = [];
                                 });
                                 if (value != null && selectedHamletId != null) {
-                                  final hamletName = hamletList.firstWhere((h) => h['id'] == selectedHamletId)['hamlet'];
-                                  await _loadRtList(hamletName, value);
+                                  await _loadRtList(selectedHamletId!, value);
                                 }
                               },
                               decoration: InputDecoration(
@@ -339,10 +384,10 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                               value: selectedRt,
                               items: [
                                 const DropdownMenuItem(value: null, child: Text("All")),
-                                ...rtList.map<DropdownMenuItem<String>>((r) => DropdownMenuItem<String>(
-                                      value: r['rt'] as String,
-                                      child: Text(r['rt'] ?? '-', style: const TextStyle(color: textColor)),
-                                    )),
+                                ...uniqueRtList.map((rt) => DropdownMenuItem<String>(
+                                  value: rt,
+                                  child: Text(rt ?? '-', style: const TextStyle(color: textColor)),
+                                )),
                               ],
                               onChanged: (value) => setState(() => selectedRt = value),
                               decoration: InputDecoration(
@@ -435,9 +480,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                   ),
                   child: Text(
                     item.status,
-                    style: TextStyle(
-                      color: getStatusColor(item.status),
-                    ),
+                    style: TextStyle(color: getStatusColor(item.status)),
                   ),
                 ),
               ),
@@ -458,5 +501,40 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
         }),
       ),
     );
+  }
+
+  Future<void> _exportPdf(List<Request> list, Map<String, User> users, Map<String, Area> areas) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => [
+          pw.Text(
+            "Laporan Data Pengajuan",
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Table.fromTextArray(
+            headers: ["No", "Tanggal", "Layanan", "Nama", "Alamat", "Status", "File"],
+            data: List<List<String>>.generate(list.length, (index) {
+              final item = list[index];
+              final user = users[item.userId];
+              final area = areas[item.areaId];
+              return [
+                "${index + 1}",
+                "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
+                item.serviceName ?? "-",
+                user?.username ?? "-",
+                area != null ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}" : "-",
+                item.status,
+                item.fileUrl ?? "-",
+              ];
+            }),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
   }
 }
