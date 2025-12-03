@@ -9,7 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'request_pdf_controller.dart';
+import 'dart:typed_data';
 class RequestController {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child("requests");
   final supabase = Supabase.instance.client;
@@ -27,36 +28,32 @@ class RequestController {
     });
   }
 
-  // 🔹 Ambil semua pengajuan yang sudah diajukan (berdasarkan area RT)
-    Stream<List<Request>> getAllRequestsByArea(String areaId) {
-      return _dbRef.onValue.asyncMap((event) async {
-        final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
+  Stream<List<Request>> getAllRequestsByArea(String areaId) {
+    return _dbRef.onValue.asyncMap((event) async {
+      final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
 
-        // Ambil semua request dari area tertentu
-        final list = await Future.wait(data.entries.map((e) async {
-          final req = Request.fromMap(Map<String, dynamic>.from(e.value), e.key);
+      final list = await Future.wait(data.entries.map((e) async {
+        final req = Request.fromMap(Map<String, dynamic>.from(e.value), e.key);
 
-          String? serviceName;
-          if (req.serviceId.isNotEmpty) {
-            final serviceDoc =
-                await _firestore.collection('services').doc(req.serviceId).get();
-            if (serviceDoc.exists) {
-              serviceName = serviceDoc.data()?['name'];
-            }
+        String? serviceName;
+        if (req.serviceId.isNotEmpty) {
+          final serviceDoc =
+              await _firestore.collection('services').doc(req.serviceId).get();
+          if (serviceDoc.exists) {
+            serviceName = serviceDoc.data()?['name'];
           }
+        }
 
-          return req.copyWith(serviceName: serviceName ?? '-');
-        }));
+        return req.copyWith(serviceName: serviceName ?? '-');
+      }));
 
-        // 🔹 Filter berdasarkan area ID RT yang sedang login
-        final filtered = list.where((r) => r.areaId == areaId).toList();
+      final filtered = list.where((r) => r.areaId == areaId).toList();
 
-        // 🔹 Urutkan dari yang terbaru
-        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-        return filtered;
-      });
-    }
+      return filtered;
+    });
+  }
 
 
   Stream<List<Request>> getRequestsByUser(String userId) {
@@ -192,5 +189,56 @@ class RequestController {
 
   Stream<int> getTotalPengajuan(String userId) {
     return getRequestsByUser(userId).map((list) => list.length);
+  }
+
+  Future<String> _uploadRequestPDF({
+    File? pdfFile,
+    Uint8List? pdfBytesWeb,
+    required String requestId,
+  }) async {
+    final storage = Supabase.instance.client.storage.from('TanonApp Storage');
+
+    final fileName = 'surat_${const Uuid().v4()}.pdf';
+    final path = 'requests/$requestId/$fileName';
+
+    final bytes = kIsWeb ? pdfBytesWeb! : await pdfFile!.readAsBytes();
+
+    await storage.uploadBinary(
+      path,
+      bytes,
+      fileOptions: const FileOptions(contentType: 'application/pdf'),
+    );
+
+    final url = storage.getPublicUrl(path);
+    return url;
+  }
+
+  Future<void> verifyRequestAutoPDF({
+    required Request request,
+    required Map<String, dynamic> user,
+    required Map<String, dynamic> area,
+    required Map<String, dynamic> service,
+  }) async {
+    final pdfController = RequestPDFController();
+
+    dynamic generatedPdf = await pdfController.generateSuratPengantarPDF(
+      user: user,
+      area: area,
+      service: service,
+      requestId: request.id,
+    );
+
+    final publicUrl = kIsWeb
+        ? await _uploadRequestPDF(pdfBytesWeb: generatedPdf, requestId: request.id)
+        : await _uploadRequestPDF(pdfFile: generatedPdf, requestId: request.id);
+
+    // Update Firebase
+    final _dbRef = FirebaseDatabase.instance.ref('requests');
+    await _dbRef.child(request.id).update({
+      "status": "Disetujui",
+      "verifiedBy": "RT",
+      "verifiedAt": DateTime.now().toIso8601String(),
+      "fileUrl": publicUrl,
+    });
   }
 }

@@ -265,3 +265,35 @@ class DetailDataPengajuanDisetujuiPage extends StatelessWidget {
     );
   }
 }
+
+
+// LOGO  PEMERINTAH KABUPATEN KEDIRI
+//       KECAMATAN PAPAR
+//       KANTOR KEPALA DESA TANON
+//       DUSUN {areas.hamlet}->capital
+// -------------------------------------
+
+// SURAT PENGANTAR
+
+// Yang bertanda tangan di bawah ini Ketua RT {areas.rt} RW {areas.rw} Dusun {areas.hamlet},
+// dengan ini mohon dengan hormat kepada Ibu/Bapak Kepala Desa untuk dapatnya dilayani bagi warga kami:
+// Nama      : {users.username}
+// Tempat/Tgl Lahir  : {users.birthPlaceDate}
+// Agama     : {users.religion}
+// Kewarganegaraan     : {users.nationality}
+// Nomor KTP     : - KOSONG DULU AJA KARENA LUPA BELUM ADA KOLOM DATANYA
+// Pekerjaan     : {users.occupation}
+// Alamat     : RT {areas.rt} RW {areas.rw} Dusun {areas.hamlet}
+// Status Perkawinan     : {users.maritalStatus}
+
+// Adapun kebutuhan yang diperlukan sebagai berikut:
+// {services.name}
+
+// Demikian untuk menjadikan maklum dan terima kasih atas bantuannya.
+
+// Mengetahui
+// {requests.verifiedAt}
+// Ketua RT {areas.rt}
+
+
+// {users.username}
