@@ -11,6 +11,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'request_pdf_controller.dart';
 import 'dart:typed_data';
+import 'package:open_file/open_file.dart';
+
 class RequestController {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child("requests");
   final supabase = Supabase.instance.client;
@@ -141,31 +143,42 @@ class RequestController {
 
   Future<void> downloadVerificationFile(String url) async {
     if (url.isEmpty) return;
+
     if (kIsWeb) {
+      // WEB → langsung buka link (browser download)
       if (!await launchUrl(Uri.parse(url))) {
         throw Exception('Tidak bisa membuka $url');
       }
     } else {
+      // MOBILE → request permission storage
       final status = await Permission.storage.request();
       if (!status.isGranted) {
         throw Exception('Storage permission tidak diberikan');
       }
+
       final dio = Dio();
       Directory? downloadDir;
+
       if (Platform.isAndroid) {
         downloadDir = Directory("/storage/emulated/0/Download");
       } else if (Platform.isIOS) {
         downloadDir = await getApplicationDocumentsDirectory();
       }
+
       if (downloadDir == null) {
         throw Exception('Tidak bisa akses folder download');
       }
+
       final name = url.split('/').last;
       final savePath = '${downloadDir.path}/$name';
+
       try {
         await dio.download(url, savePath);
+        // Buka file PDF setelah download selesai
+        await OpenFile.open(savePath);
       } catch (e) {
         print('Download gagal: $e');
+        throw Exception('Gagal mengunduh file');
       }
     }
   }
