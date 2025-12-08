@@ -1,5 +1,6 @@
 class User {
   String id;
+  String nik;
   String username;
   String email;
   String password;
@@ -14,6 +15,7 @@ class User {
 
   User({
     required this.id,
+    required this.nik,
     required this.username,
     required this.email,
     required this.password,
@@ -30,6 +32,7 @@ class User {
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
       id: map['id'],
+      nik: map['nik'] ?? '',
       username: map['username'] ?? '',
       email: map['email'] ?? '',
       password: map['password'] ?? '',
@@ -46,6 +49,7 @@ class User {
 
   Map<String, dynamic> toMap() {
     return {
+      'nik': nik,
       'username': username,
       'email': email,
       'password': password,

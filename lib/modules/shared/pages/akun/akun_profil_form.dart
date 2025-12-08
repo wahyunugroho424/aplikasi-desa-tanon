@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/controllers/user_controller.dart';
+import 'package:flutter/services.dart';
 
 class AkunProfilFormPage extends StatefulWidget {
   final String routePrefix;
@@ -16,6 +17,7 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
   final _formKey = GlobalKey<FormState>();
   final userController = UserController();
 
+  late TextEditingController nikController;
   late TextEditingController usernameController;
   late TextEditingController emailController;
   late TextEditingController passwordController;
@@ -42,6 +44,7 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
   @override
   void initState() {
     super.initState();
+    nikController = TextEditingController();
     usernameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
@@ -69,6 +72,7 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
 
     final user = await userController.getUserById(userId!);
     if (user != null) {
+      nikController.text = user.nik;
       usernameController.text = user.username;
       emailController.text = user.email;
       passwordController.text = user.password;
@@ -115,6 +119,7 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
 
   @override
   void dispose() {
+    nikController.dispose();
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
@@ -140,6 +145,7 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
 
       await userController.updateUser(
         id: userId!,
+        nik: nikController.text,
         username: usernameController.text,
         email: emailController.text,
         password: passwordController.text,
@@ -197,6 +203,28 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
           key: _formKey,
           child: ListView(
             children: [
+              TextFormField(
+                controller: nikController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(16),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'NIK',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'NIK tidak boleh kosong';
+                  }
+                  if (value.length != 16) {
+                    return 'NIK harus 16 digit';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
               _buildTextField('Username', usernameController),
               const SizedBox(height: 16),
               _buildTextField('Email', emailController, enabled: false),
@@ -300,17 +328,25 @@ class _AkunProfilFormPageState extends State<AkunProfilFormPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {bool required = true, bool enabled = true}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool required = true,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
       ),
-      validator: (value) =>
-          required && value!.isEmpty ? '$label tidak boleh kosong' : null,
+      validator: validator ??
+          (value) =>
+              required && value!.isEmpty ? '$label tidak boleh kosong' : null,
     );
   }
 

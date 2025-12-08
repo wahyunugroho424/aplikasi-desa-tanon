@@ -40,6 +40,7 @@ class UserController {
 
     final user = User(
       id: id,
+      nik: '',
       username: username.trim(),
       email: email.trim(),
       password: password.trim(),
@@ -58,6 +59,7 @@ class UserController {
 
   Future<void> updateUser({
     required String id,
+    required String nik,
     required String username,
     required String email,
     required String password,
@@ -73,6 +75,7 @@ class UserController {
   }) async {
     final user = User(
       id: id,
+      nik: nik.trim(),
       username: username.trim(),
       email: email.trim(),
       password: password.trim(),
@@ -98,6 +101,7 @@ class UserController {
   }) async {
     final user = User(
       id: id,
+      nik: '',
       username: username.trim(),
       email: email.trim(),
       password: password.trim(),

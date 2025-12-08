@@ -141,6 +141,7 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               children: [
+                                _infoRow('NIK', _userData?['nik'] ?? '-'),
                                 _infoRow('Email', _userData?['email'] ?? '-'),
                                 _infoRow('Tempat & Tgl Lahir', _userData?['birthPlaceDate'] ?? '-'),
                                 _infoRow('Agama', _userData?['religion'] ?? '-'),
