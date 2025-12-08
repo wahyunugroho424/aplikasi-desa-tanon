@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/controllers/request_controller.dart';
 import '../../../../../core/controllers/user_controller.dart';
 import '../../../../../core/controllers/area_controller.dart';
+import '../../../../../core/controllers/service_controller.dart';
 import '../../../../../core/models/request.dart';
 import '../../../../../core/models/user.dart';
 import '../../../../../core/models/area.dart';
+import '../../../../../core/models/service.dart';
 
 class DesaDataRequestsPage extends StatefulWidget {
   const DesaDataRequestsPage({super.key});
@@ -19,6 +21,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
   final requestController = RequestController();
   final userController = UserController();
   final areaController = AreaController();
+  final serviceController = ServiceController();
 
   String searchKeyword = '';
   DateTime? startDate;
@@ -90,23 +93,40 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                                   if (!areaSnap.hasData) return const Center(child: CircularProgressIndicator());
                                   final areas = {for (var a in areaSnap.data!) a.id: a};
 
-                                  final filtered = requests.where((req) {
-                                    final user = users[req.userId];
-                                    final area = areas[req.areaId];
-                                    if (user == null || area == null) return false;
+                                  return StreamBuilder<List<Service>>(
+                                    stream: serviceController.getServicesStream(),
+                                    builder: (context, serviceSnap) {
+                                      if (!serviceSnap.hasData) return const Center(child: CircularProgressIndicator());
+                                      final services = {for (var s in serviceSnap.data!) s.id: s};
 
-                                    final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
-                                    final matchesDate = (startDate == null || endDate == null) ||
-                                        (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                                      final filtered = requests.where((req) {
+                                        final user = users[req.userId];
+                                        final area = areas[req.areaId];
+                                        if (user == null || area == null) return false;
+
+                                        final matchesKeyword =
+                                            user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+
+                                        final matchesDate =
+                                            (startDate == null || endDate == null) ||
+                                            (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
                                             req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
-                                    final matchesHamlet = selectedHamletId == null || area.hamlet == selectedHamletId;
-                                    final matchesRw = selectedRw == null || area.rw == selectedRw;
-                                    final matchesRt = selectedRt == null || area.rt == selectedRt;
 
-                                    return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
-                                  }).toList();
+                                        final matchesHamlet =
+                                            selectedHamletId == null || area.hamlet == selectedHamletId;
+                                        final matchesRw = selectedRw == null || area.rw == selectedRw;
+                                        final matchesRt = selectedRt == null || area.rt == selectedRt;
 
-                                  return _buildRequestTable(filtered, users, areas);
+                                        return matchesKeyword &&
+                                            matchesDate &&
+                                            matchesHamlet &&
+                                            matchesRw &&
+                                            matchesRt;
+                                      }).toList();
+
+                                      return _buildRequestTable(filtered, users, areas, services);
+                                    },
+                                  );
                                 },
                               );
                             },
@@ -123,9 +143,11 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                         final requests = await requestController.getRequestsStream().first;
                         final usersList = await userController.getUsersStream().first;
                         final areasList = await areaController.getAreasStream().first;
+                        final servicesList = await serviceController.getServicesStream().first;
 
                         final users = {for (var u in usersList) u.id: u};
                         final areas = {for (var a in areasList) a.id: a};
+                        final services = {for (var s in servicesList) s.id: s};
 
                         final filtered = requests.where((req) {
                           final user = users[req.userId];
@@ -156,6 +178,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                           requests: filtered,
                           users: users,
                           areas: areas,
+                          services: services,
                         );
                       },
                       backgroundColor: const Color(0xFF245BCA),
@@ -433,7 +456,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
     );
   }
 
-  Widget _buildRequestTable(List<Request> list, Map<String, User> users, Map<String, Area> areas) {
+  Widget _buildRequestTable(List<Request> list, Map<String, User> users, Map<String, Area> areas, Map<String, Service> services) {
     Color getStatusColor(String status) {
       switch (status.toLowerCase()) {
         case 'dibatalkan':
@@ -471,15 +494,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
             cells: [
               DataCell(Text("${index + 1}")),
               DataCell(Text("${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}")),
-              DataCell(
-                FutureBuilder<String>(
-                  future: requestController.getServiceName(item.serviceId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const Text("-");
-                    return Text(snapshot.data!);
-                  },
-                ),
-              ),
+              DataCell(Text(services[item.serviceId]?.name ?? "-")),
               DataCell(Text(user?.username ?? "-")),
               DataCell(Text(area != null ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}" : "-")),
               DataCell(

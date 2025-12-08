@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/request.dart';
 import '../models/area.dart';
 import '../models/user.dart';
+import '../models/service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:dio/dio.dart';
@@ -250,6 +251,7 @@ class RequestController {
     required List<Request> requests,
     required Map<String, User> users,
     required Map<String, Area> areas,
+    required Map<String, Service> services,
   }) async {
     final pdfController = RequestPDFController();
 
@@ -257,6 +259,7 @@ class RequestController {
       requests: requests,
       users: users,
       areas: areas,
+      services: services,
     );
   }
 }

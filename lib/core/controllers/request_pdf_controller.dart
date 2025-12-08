@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 import '../models/request.dart';
 import '../models/user.dart';
 import '../models/area.dart';
+import '../models/service.dart';
 
 class RequestPDFController {
   Future<dynamic> generateSuratPengantarPDF({
@@ -152,6 +153,7 @@ class RequestPDFController {
     required List<Request> requests,
     required Map<String, User> users,
     required Map<String, Area> areas,
+    required Map<String, Service> services,
   }) async {
     final pdf = pw.Document();
 
@@ -172,17 +174,18 @@ class RequestPDFController {
               final item = requests[index];
               final user = users[item.userId];
               final area = areas[item.areaId];
+              final service = services[item.serviceId];
 
               return [
                 "${index + 1}",
                 "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
-                item.serviceName ?? "-",
+                service?.name ?? "-",
                 user?.username ?? "-",
                 area != null
                     ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}"
                     : "-",
                 item.status,
-                item.fileUrl ?? "-",
+                item.fileUrl != null ? "Ada" : "-",
               ];
             }),
           ),
