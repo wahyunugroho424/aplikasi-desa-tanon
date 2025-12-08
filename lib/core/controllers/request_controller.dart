@@ -7,7 +7,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'request_pdf_controller.dart';
 import 'user_controller.dart';
@@ -143,43 +142,33 @@ class RequestController {
       'notes': reason,
     });
   }
-
-  Future<void> downloadVerificationFile(String url) async {
-    if (url.isEmpty) return;
+  
+  Future<String> downloadVerificationFile(String url) async {
+    if (url.isEmpty) throw Exception("URL kosong");
 
     if (kIsWeb) {
-      if (!await launchUrl(Uri.parse(url))) {
-        throw Exception('Tidak bisa membuka $url');
-      }
-    } else {
-      final status = await Permission.storage.request();
-      if (!status.isGranted) {
-        throw Exception('Storage permission tidak diberikan');
-      }
+      await launchUrl(Uri.parse(url));
+      return "WEB";
+    }
 
+    try {
       final dio = Dio();
-      Directory? downloadDir;
 
-      if (Platform.isAndroid) {
-        downloadDir = Directory("/storage/emulated/0/Download");
-      } else if (Platform.isIOS) {
-        downloadDir = await getApplicationDocumentsDirectory();
+      final dir = await getExternalStorageDirectory();
+      if (dir == null) {
+        throw Exception("Storage tidak tersedia");
       }
 
-      if (downloadDir == null) {
-        throw Exception('Tidak bisa akses folder download');
-      }
+      final fileName = 'surat_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final savePath = '${dir.path}/$fileName';
 
-      final name = url.split('/').last;
-      final savePath = '${downloadDir.path}/$name';
+      await dio.download(url, savePath);
 
-      try {
-        await dio.download(url, savePath);
-        await OpenFile.open(savePath);
-      } catch (e) {
-        print('Download gagal: $e');
-        throw Exception('Gagal mengunduh file');
-      }
+      await OpenFile.open(savePath);
+
+      return savePath; 
+    } catch (e) {
+      throw Exception("Gagal mengunduh file");
     }
   }
 
