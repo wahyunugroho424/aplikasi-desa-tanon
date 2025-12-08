@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/controllers/request_controller.dart';
+import '../../../../../core/controllers/auth_controller.dart';
 import '../../../../../core/models/request.dart';
 
 class DetailDataPengajuanPage extends StatelessWidget {
@@ -215,11 +216,16 @@ class DetailDataPengajuanPage extends StatelessWidget {
                                   Expanded(
                                     child: ElevatedButton(
                                       onPressed: () async {
+                                        final authController = AuthController();
+                                        final currentUserData = await authController.getCurrentUserData();
+                                        final currentUserId = authController.currentUser?.uid ?? '';
+                                        final currentUsername = currentUserData['username'] ?? 'RT';
                                         await requestController.verifyRequestAutoPDF(
                                           request: request,
                                           user: user,
                                           area: area,
                                           service: service,
+                                          verifiedById: currentUserId,
                                         );
 
                                         ScaffoldMessenger.of(context).showSnackBar(
@@ -249,7 +255,7 @@ class DetailDataPengajuanPage extends StatelessWidget {
                                       onPressed: () async {
                                         await requestController.verifyRequest(
                                           id: request.id,
-                                          verifiedBy: "RT",
+                                          verifiedById: "RT",
                                           status: "Ditolak",
                                         );
                                         ScaffoldMessenger.of(context).showSnackBar(

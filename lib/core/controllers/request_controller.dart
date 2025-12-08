@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'request_pdf_controller.dart';
+import 'user_controller.dart';
 import 'dart:typed_data';
 import 'package:open_file/open_file.dart';
 
@@ -17,6 +18,7 @@ class RequestController {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child("requests");
   final supabase = Supabase.instance.client;
   final _firestore = FirebaseFirestore.instance;
+  final UserController _userController = UserController();
 
   Stream<List<Request>> getRequestsStream() {
     return _dbRef.onValue.map((event) {
@@ -113,7 +115,7 @@ class RequestController {
 
   Future<void> verifyRequest({
     required String id,
-    required String verifiedBy,
+    required String verifiedById,
     required String status,
     String? notes,
     File? verificationFile,
@@ -122,9 +124,10 @@ class RequestController {
     if (verificationFile != null) {
       fileUrl = await _uploadVerificationFile(verificationFile, id);
     }
+    String username = await _userController.getUsernameById(verifiedById);
     await _dbRef.child(id).update({
       'status': status,
-      'verifiedBy': verifiedBy,
+      'verifiedBy': username,
       'verifiedAt': DateTime.now().toIso8601String(),
       'notes': notes ?? '',
       'fileUrl': fileUrl,
@@ -145,12 +148,10 @@ class RequestController {
     if (url.isEmpty) return;
 
     if (kIsWeb) {
-      // WEB → langsung buka link (browser download)
       if (!await launchUrl(Uri.parse(url))) {
         throw Exception('Tidak bisa membuka $url');
       }
     } else {
-      // MOBILE → request permission storage
       final status = await Permission.storage.request();
       if (!status.isGranted) {
         throw Exception('Storage permission tidak diberikan');
@@ -174,7 +175,6 @@ class RequestController {
 
       try {
         await dio.download(url, savePath);
-        // Buka file PDF setelah download selesai
         await OpenFile.open(savePath);
       } catch (e) {
         print('Download gagal: $e');
@@ -231,6 +231,7 @@ class RequestController {
     required Map<String, dynamic> user,
     required Map<String, dynamic> area,
     required Map<String, dynamic> service,
+    required String verifiedById,
   }) async {
     final pdfController = RequestPDFController();
 
@@ -239,17 +240,19 @@ class RequestController {
       area: area,
       service: service,
       requestId: request.id,
+      verifiedBy: await _userController.getUsernameById(verifiedById),
     );
 
     final publicUrl = kIsWeb
         ? await _uploadRequestPDF(pdfBytesWeb: generatedPdf, requestId: request.id)
         : await _uploadRequestPDF(pdfFile: generatedPdf, requestId: request.id);
 
-    // Update Firebase
     final _dbRef = FirebaseDatabase.instance.ref('requests');
+    String username = await _userController.getUsernameById(verifiedById);
+    
     await _dbRef.child(request.id).update({
       "status": "Disetujui",
-      "verifiedBy": "RT",
+      "verifiedBy": username,
       "verifiedAt": DateTime.now().toIso8601String(),
       "fileUrl": publicUrl,
     });

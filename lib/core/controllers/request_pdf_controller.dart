@@ -1,11 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
-import 'dart:html' as html;
 
 class RequestPDFController {
   Future<dynamic> generateSuratPengantarPDF({
@@ -13,6 +11,7 @@ class RequestPDFController {
     required Map<String, dynamic> area,
     required Map<String, dynamic> service,
     required String requestId,
+    required String verifiedBy,
   }) async {
     final pdf = pw.Document();
 
@@ -99,9 +98,9 @@ class RequestPDFController {
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
                     pw.Text(_formatDate(DateTime.now()), style: pw.TextStyle(fontSize: 12)),
-                    pw.Text("Ketua RT $rt", style: pw.TextStyle(fontSize: 12)),
+                    pw.Text("Ketua RT", style: pw.TextStyle(fontSize: 12)),
                     pw.SizedBox(height: 40),
-                    pw.Text(username, style: pw.TextStyle(fontSize: 12)),
+                    pw.Text(verifiedBy, style: pw.TextStyle(fontSize: 12)),
                   ],
                 ),
               ),
