@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/request.dart';
+import '../models/area.dart';
+import '../models/user.dart';
 import 'package:uuid/uuid.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
@@ -142,7 +144,7 @@ class RequestController {
       'notes': reason,
     });
   }
-  
+
   Future<String> downloadVerificationFile(String url) async {
     if (url.isEmpty) throw Exception("URL kosong");
 
@@ -154,10 +156,7 @@ class RequestController {
     try {
       final dio = Dio();
 
-      final dir = await getExternalStorageDirectory();
-      if (dir == null) {
-        throw Exception("Storage tidak tersedia");
-      }
+      final dir = await getApplicationDocumentsDirectory();
 
       final fileName = 'surat_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final savePath = '${dir.path}/$fileName';
@@ -245,5 +244,19 @@ class RequestController {
       "verifiedAt": DateTime.now().toIso8601String(),
       "fileUrl": publicUrl,
     });
+  }
+
+  Future<void> exportRequestsPdf({
+    required List<Request> requests,
+    required Map<String, User> users,
+    required Map<String, Area> areas,
+  }) async {
+    final pdfController = RequestPDFController();
+
+    await pdfController.exportRequestsPdf(
+      requests: requests,
+      users: users,
+      areas: areas,
+    );
   }
 }

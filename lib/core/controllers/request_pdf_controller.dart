@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
+import '../models/request.dart';
+import '../models/user.dart';
+import '../models/area.dart';
 
 class RequestPDFController {
   Future<dynamic> generateSuratPengantarPDF({
@@ -142,5 +146,52 @@ class RequestPDFController {
       "Juli","Agustus","September","Oktober","November","Desember"
     ];
     return "${date.day} ${bulan[date.month - 1]} ${date.year}";
+  }
+
+  Future<void> exportRequestsPdf({
+    required List<Request> requests,
+    required Map<String, User> users,
+    required Map<String, Area> areas,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => [
+          pw.Text(
+            "Laporan Data Pengajuan",
+            style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Table.fromTextArray(
+            headers: ["No", "Tanggal", "Layanan", "Nama", "Alamat", "Status", "File"],
+            data: List.generate(requests.length, (index) {
+              final item = requests[index];
+              final user = users[item.userId];
+              final area = areas[item.areaId];
+
+              return [
+                "${index + 1}",
+                "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
+                item.serviceName ?? "-",
+                user?.username ?? "-",
+                area != null
+                    ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}"
+                    : "-",
+                item.status,
+                item.fileUrl ?? "-",
+              ];
+            }),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+    );
   }
 }

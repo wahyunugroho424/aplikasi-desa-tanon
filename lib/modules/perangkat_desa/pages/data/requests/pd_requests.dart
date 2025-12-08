@@ -7,8 +7,6 @@ import '../../../../../core/controllers/area_controller.dart';
 import '../../../../../core/models/request.dart';
 import '../../../../../core/models/user.dart';
 import '../../../../../core/models/area.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 class DesaDataRequestsPage extends StatefulWidget {
   const DesaDataRequestsPage({super.key});
@@ -125,6 +123,7 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                         final requests = await requestController.getRequestsStream().first;
                         final usersList = await userController.getUsersStream().first;
                         final areasList = await areaController.getAreasStream().first;
+
                         final users = {for (var u in usersList) u.id: u};
                         final areas = {for (var a in areasList) a.id: a};
 
@@ -133,22 +132,35 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
                           final area = areas[req.areaId];
                           if (user == null || area == null) return false;
 
-                          final matchesKeyword = user.username.toLowerCase().contains(searchKeyword.toLowerCase());
-                          final matchesDate = (startDate == null || endDate == null) ||
+                          final matchesKeyword =
+                              user.username.toLowerCase().contains(searchKeyword.toLowerCase());
+
+                          final matchesDate =
+                              (startDate == null || endDate == null) ||
                               (req.createdAt.isAfter(startDate!.subtract(const Duration(days: 1))) &&
-                                  req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
-                          final matchesHamlet = selectedHamletId == null || area.hamlet == selectedHamletId;
+                              req.createdAt.isBefore(endDate!.add(const Duration(days: 1))));
+
+                          final matchesHamlet =
+                              selectedHamletId == null || area.hamlet == selectedHamletId;
                           final matchesRw = selectedRw == null || area.rw == selectedRw;
                           final matchesRt = selectedRt == null || area.rt == selectedRt;
 
-                          return matchesKeyword && matchesDate && matchesHamlet && matchesRw && matchesRt;
+                          return matchesKeyword &&
+                              matchesDate &&
+                              matchesHamlet &&
+                              matchesRw &&
+                              matchesRt;
                         }).toList();
 
-                        _exportPdf(filtered, users, areas);
+                        await requestController.exportRequestsPdf(
+                          requests: filtered,
+                          users: users,
+                          areas: areas,
+                        );
                       },
                       backgroundColor: const Color(0xFF245BCA),
                       child: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                    ),
+                    )
                   ),
                 ],
               ),
@@ -501,40 +513,5 @@ class _DesaDataRequestsPageState extends State<DesaDataRequestsPage> {
         }),
       ),
     );
-  }
-
-  Future<void> _exportPdf(List<Request> list, Map<String, User> users, Map<String, Area> areas) async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.MultiPage(
-        build: (context) => [
-          pw.Text(
-            "Laporan Data Pengajuan",
-            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 12),
-          pw.Table.fromTextArray(
-            headers: ["No", "Tanggal", "Layanan", "Nama", "Alamat", "Status", "File"],
-            data: List<List<String>>.generate(list.length, (index) {
-              final item = list[index];
-              final user = users[item.userId];
-              final area = areas[item.areaId];
-              return [
-                "${index + 1}",
-                "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
-                item.serviceName ?? "-",
-                user?.username ?? "-",
-                area != null ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}" : "-",
-                item.status,
-                item.fileUrl ?? "-",
-              ];
-            }),
-          ),
-        ],
-      ),
-    );
-
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
   }
 }
