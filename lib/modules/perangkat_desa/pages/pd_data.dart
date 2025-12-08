@@ -5,6 +5,7 @@ import '../../../../../core/controllers/user_controller.dart';
 import '../../../../../core/controllers/service_controller.dart';
 import '../../../../../core/controllers/news_controller.dart';
 import '../../../../../core/controllers/area_controller.dart';
+import '../../../../../core/controllers/request_controller.dart';
 
 class DesaDataPage extends StatefulWidget {
   const DesaDataPage({super.key});
@@ -18,6 +19,7 @@ class _DesaDataPageState extends State<DesaDataPage> {
   final serviceController = ServiceController();
   final newsController = NewsController();
   final areaController = AreaController();
+  final requestController = RequestController();
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +116,21 @@ class _DesaDataPageState extends State<DesaDataPage> {
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: _buildDataCard(
-                    title: 'Data Pengajuan',
-                    iconPath: 'assets/images/ic_requests.png',
-                    total: 80,
-                    color: const Color(0xFFCEDDFF),
-                    buttonColor: const Color(0xFF00194A),
-                    buttonTextColor: Colors.white,
-                    onPressed: () => context.push('/pd/data/requests'),
+                  child: StreamBuilder<int>(
+                    stream: requestController.getTotalRequests(),
+                    builder: (context, snapshot) {
+                      final total = snapshot.data ?? 0;
+
+                      return _buildDataCard(
+                        title: 'Data Pengajuan',
+                        iconPath: 'assets/images/ic_requests.png',
+                        total: total,
+                        color: const Color(0xFFCEDDFF),
+                        buttonColor: const Color(0xFF00194A),
+                        buttonTextColor: Colors.white,
+                        onPressed: () => context.push('/pd/data/requests'),
+                      );
+                    },
                   ),
                 ),
 
