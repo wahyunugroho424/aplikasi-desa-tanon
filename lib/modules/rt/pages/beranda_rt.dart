@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ class BerandaRT extends StatelessWidget {
     final AuthController authController = AuthController();
     final NewsController newsController = NewsController();
     final PengajuanController pengajuanController = PengajuanController();
+    
 
     return FutureBuilder<Map<String, dynamic>>(
       future: authController.getCurrentUserData(),
@@ -27,6 +29,9 @@ class BerandaRT extends StatelessWidget {
         final userData = snapshot.data!;
         final userName = userData['username'] ?? 'RT';
         final areaId = userData['areaId'] ?? '';
+        final categoryId = userData['categoryId'] ?? '';
+        final String serviceId = categoryId; // atau kiriman dari halaman sebelumnya
+
 
         return Scaffold(
           backgroundColor: const Color(0xFFF6F7FB),
@@ -35,7 +40,7 @@ class BerandaRT extends StatelessWidget {
               children: [
                 _buildHeader(context, userName, authController),
                 const SizedBox(height: 20),
-                _buildMainCard(context, areaId, pengajuanController),
+                _buildMainCard(context, areaId, pengajuanController, categoryId),
                 const SizedBox(height: 25),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -110,7 +115,7 @@ class BerandaRT extends StatelessWidget {
 
 
   // === MAIN CARD (3 KARTU STATISTIK SESUAI GAMBAR) ===
-  Widget _buildMainCard(BuildContext context, String areaId, PengajuanController pengajuanController) {
+  Widget _buildMainCard(BuildContext context, String areaId, PengajuanController pengajuanController, String categoryId) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -132,31 +137,36 @@ class BerandaRT extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: StreamBuilder<int>(
-                    stream: pengajuanController.getTotalPengajuanByArea(areaId),
-                    builder: (context, snapshot) {
-                      final total = snapshot.data ?? 0;
-                      return _buildStatCard(
-                        iconPath: 'assets/images/ic_requests.png',
-                        title: 'Pengajuan',
-                        total: total,
-                      );
-                    },
-                  ),
+                  child: 
+                StreamBuilder<int>(
+                  stream: pengajuanController.getTotalPengajuanByArea(areaId),
+                  builder: (context, snapshot) {
+                    final total = snapshot.data ?? 0;
+                    return _buildStatCard(
+                      iconPath: 'assets/images/ic_requests.png',
+                      title: 'Pengajuan',
+                      total: total,
+                    );
+                  },
+                ),
+
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: StreamBuilder<int>(
-                    stream: pengajuanController.getTotalDitolakByArea(areaId),
-                    builder: (context, snapshot) {
-                      final total = snapshot.data ?? 0;
-                      return _buildStatCard(
-                        iconPath: 'assets/images/ic_news.png',
-                        title: 'Surat ditolak',
-                        total: total,
-                      );
-                    },
-                  ),
+                  child: 
+                StreamBuilder<int>(
+                  stream: pengajuanController.getTotalDitolakByArea(areaId),
+                  builder: (context, snapshot) {
+                    final total = snapshot.data ?? 0;
+                    return _buildStatCard(
+                      iconPath: 'assets/images/ic_news.png',
+                      title: 'Surat ditolak',
+                      total: total,
+                    );
+                  },
+                ),
+
+
                 ),
               ],
             ),
@@ -167,7 +177,8 @@ class BerandaRT extends StatelessWidget {
               children: [
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.42,
-                  child: StreamBuilder<int>(
+                  child: 
+                  StreamBuilder<int>(
                     stream: pengajuanController.getTotalDisetujuiByArea(areaId),
                     builder: (context, snapshot) {
                       final total = snapshot.data ?? 0;
@@ -178,6 +189,7 @@ class BerandaRT extends StatelessWidget {
                       );
                     },
                   ),
+
                 ),
               ],
             ),

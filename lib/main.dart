@@ -5,6 +5,8 @@ import 'router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'core/services/notification_handler.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,13 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: appRouter,
+
+      // 👇 INI YANG DIMAKSUD "BUNGKUS DI BUILDER"
+      builder: (context, child) {
+        NotificationHandler.setup(context);
+        return child!;
+      },
     );
   }
 }
+

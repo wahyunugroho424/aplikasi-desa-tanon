@@ -15,6 +15,7 @@ import 'modules/shared/pages/akun/akun.dart';
 import 'modules/shared/pages/akun/akun_profil.dart';
 import 'modules/shared/pages/akun/akun_profil_form.dart';
 import 'modules/shared/pages/akun/akun_change_password.dart';
+import 'modules/shared/pages/akun/akun_signature_form.dart';
 
 // === PERANGKAT DESA ===
 import 'modules/perangkat_desa/pd_main.dart';
@@ -220,6 +221,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/rt/halaman_akun',builder: (context, state) => AkunProfilPage(routePrefix: 'rt')),
         GoRoute(path: '/rt/akun/profil/form',builder: (_, __) => const AkunProfilFormPage(routePrefix: 'rt')),
         GoRoute(path: '/rt/akun/password',builder: (_, __) => const AkunChangePasswordPage(routePrefix: 'rt')),
+        GoRoute(
+          path: '/rt/akun/profil/signature',
+          builder: (_, __) => const AkunSignaturePage(),
+        ),
 
 
         GoRoute(path: '/rt/berita', builder: (_, __) => BeritaRTPage()),

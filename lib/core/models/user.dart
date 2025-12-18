@@ -12,6 +12,7 @@ class User {
   String areaId;
   String phone;
   String role;
+  String? signature;
 
   User({
     required this.id,
@@ -27,6 +28,7 @@ class User {
     required this.areaId,
     required this.phone,
     required this.role,
+    this.signature,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -44,6 +46,7 @@ class User {
       areaId: map['areaId'] ?? '',
       phone: map['phone'] ?? '',
       role: map['role'] ?? '',
+      signature: map['signature'] ?? '',
     );
   }
 
@@ -61,6 +64,7 @@ class User {
       'areaId': areaId,
       'phone': phone,
       'role': role,
+      'signature': signature,
     };
   }
 }

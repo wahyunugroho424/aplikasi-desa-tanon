@@ -30,7 +30,8 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    final doc = await _firestore.collection('users').doc(currentUser.uid).get();
+    final doc =
+        await _firestore.collection('users').doc(currentUser.uid).get();
 
     if (!mounted) return;
 
@@ -49,6 +50,7 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  // ===== HEADER =====
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -64,7 +66,8 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                       ),
                       SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
@@ -73,8 +76,9 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                                 child: CircleAvatar(
                                   backgroundColor: Colors.white,
                                   child: IconButton(
-                                    icon: const Icon(Icons.arrow_back, color: Color(0xFF245BCA)),
-                                    onPressed: () { context.pop(); },
+                                    icon: const Icon(Icons.arrow_back,
+                                        color: Color(0xFF245BCA)),
+                                    onPressed: () => context.pop(),
                                   ),
                                 ),
                               ),
@@ -92,6 +96,8 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                       ),
                     ],
                   ),
+
+                  // ===== CONTENT =====
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
@@ -113,9 +119,11 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                           const CircleAvatar(
                             radius: 40,
                             backgroundColor: Color(0xFF4E82EA),
-                            child: Icon(Icons.person, size: 50, color: Colors.white),
+                            child: Icon(Icons.person,
+                                size: 50, color: Colors.white),
                           ),
                           const SizedBox(height: 12),
+
                           Text(
                             _userData?['username'] ?? 'Tidak ada nama',
                             style: GoogleFonts.poppins(
@@ -124,6 +132,7 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                               color: const Color(0xFF00194A),
                             ),
                           ),
+
                           Text(
                             _userData?['role'] ?? 'Warga Desa',
                             style: GoogleFonts.poppins(
@@ -131,45 +140,73 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                               color: Colors.grey[700],
                             ),
                           ),
+
                           const SizedBox(height: 16),
+
+                          // ===== INFO PROFIL =====
                           Container(
                             decoration: BoxDecoration(
                               color: const Color(0xFFF7F9FF),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF4E82EA)),
+                              border:
+                                  Border.all(color: const Color(0xFF4E82EA)),
                             ),
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               children: [
                                 _infoRow('NIK', _userData?['nik'] ?? '-'),
-                                _infoRow('Email', _userData?['email'] ?? '-'),
-                                _infoRow('Tempat & Tgl Lahir', _userData?['birthPlaceDate'] ?? '-'),
-                                _infoRow('Agama', _userData?['religion'] ?? '-'),
-                                _infoRow('Kewarganegaraan', _userData?['nationality'] ?? '-'),
-                                _infoRow('Pekerjaan', _userData?['occupation'] ?? '-'),
-                                _infoRow('Status Perkawinan', _userData?['maritalStatus'] ?? '-'),
+                                _infoRow(
+                                    'Email', _userData?['email'] ?? '-'),
+                                _infoRow(
+                                    'Tempat & Tgl Lahir',
+                                    _userData?['birthPlaceDate'] ?? '-'),
+                                _infoRow(
+                                    'Agama', _userData?['religion'] ?? '-'),
+                                _infoRow('Kewarganegaraan',
+                                    _userData?['nationality'] ?? '-'),
+                                _infoRow('Pekerjaan',
+                                    _userData?['occupation'] ?? '-'),
+                                _infoRow('Status Perkawinan',
+                                    _userData?['maritalStatus'] ?? '-'),
                                 FutureBuilder<String>(
-                                  future: UserController().getFullAddress(_userData?['areaId'] ?? ''),
+                                  future: UserController().getFullAddress(
+                                      _userData?['areaId'] ?? ''),
                                   builder: (context, snapshot) {
                                     String alamat = '-';
-                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                    if (snapshot.connectionState ==
+                                            ConnectionState.done &&
+                                        snapshot.hasData) {
                                       alamat = snapshot.data!;
                                     }
                                     return _infoRow('Alamat', alamat);
                                   },
                                 ),
-                                _infoRow('No. HP', _userData?['phone'] ?? '-'),
+                                _infoRow(
+                                    'No. HP', _userData?['phone'] ?? '-'),
                               ],
                             ),
                           ),
+
+                          /// ===== TANDA TANGAN KHUSUS RT =====
+                          if (_userData?['role'] == 'RT') ...[
+                            const SizedBox(height: 20),
+                            _buildSignatureCard(),
+                          ],
+
                           const SizedBox(height: 24),
+
+                          // ===== BUTTON EDIT =====
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () async {
                                 final result = await context.push(
                                   '/${widget.routePrefix}/akun/profil/form',
-                                  extra: {'from': '/${widget.routePrefix}/akun/profil', 'prefix': widget.routePrefix},
+                                  extra: {
+                                    'from':
+                                        '/${widget.routePrefix}/akun/profil',
+                                    'prefix': widget.routePrefix
+                                  },
                                 );
                                 if (result == true) {
                                   _loadUserData();
@@ -185,7 +222,8 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF245BCA),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -202,6 +240,7 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
     );
   }
 
+  // ===== ROW INFO =====
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -223,6 +262,75 @@ class _AkunProfilPageState extends State<AkunProfilPage> {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== SIGNATURE CARD =====
+  Widget _buildSignatureCard() {
+    final signatureUrl = _userData?['signature'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF4E82EA)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tanda Tangan RT',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF00194A),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          if (signatureUrl != null && signatureUrl.isNotEmpty)
+            Center(
+              child: Image.network(
+                signatureUrl,
+                height: 120,
+                fit: BoxFit.contain,
+              ),
+            )
+          else
+            Text(
+              'Belum ada tanda tangan',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+
+          const SizedBox(height: 12),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final result = await context.push(
+                  '/${widget.routePrefix}/akun/profil/signature',
+                );
+                if (result == true) {
+                  _loadUserData();
+                }
+              },
+              label: Text(
+                signatureUrl == null ? 'Tambah TTD' : 'Ubah TTD',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF245BCA),
               ),
             ),
           ),

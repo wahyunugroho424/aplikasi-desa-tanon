@@ -210,4 +210,14 @@ class UserController {
       return data;
     }).toList();
   }
+
+  Future<void> updateUserSignature({
+    required String userId,
+    required String signatureUrl,
+  }) async {
+    await _firestore.collection(collectionName).doc(userId).update({
+      'signature': signatureUrl,
+    });
+  }
+
 }

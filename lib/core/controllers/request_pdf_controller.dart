@@ -5,12 +5,14 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
+
 import '../models/request.dart';
 import '../models/user.dart';
 import '../models/area.dart';
 import '../models/service.dart';
 
 class RequestPDFController {
+
   Future<dynamic> generateSuratPengantarPDF({
     required Map<String, dynamic> user,
     required Map<String, dynamic> area,
@@ -28,13 +30,23 @@ class RequestPDFController {
     final ttl = user["birthPlaceDate"] ?? "-";
     final agama = user["religion"] ?? "-";
     final warga = user["nationality"] ?? "-";
+    final nik = user["nik"] ?? "-";
     final pekerjaan = user["occupation"] ?? "-";
     final statusKawin = user["maritalStatus"] ?? "-";
     final serviceName = service["name"] ?? "-";
 
+    /// LOGO
     final logo = pw.MemoryImage(
-      (await rootBundle.load('assets/images/logo-kab.png')).buffer.asUint8List(),
+      (await rootBundle.load('assets/images/logo-kab.png'))
+          .buffer
+          .asUint8List(),
     );
+
+    /// ===============================
+    /// DATA BARCODE
+    /// ===============================
+    final barcodeData =
+        "SURAT-TANON|$username|$requestId|$verifiedBy|${DateTime.now().toIso8601String()}";
 
     pdf.addPage(
       pw.Page(
@@ -44,35 +56,50 @@ class RequestPDFController {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
+
+              /// ===== HEADER =====
               pw.Center(
                 child: pw.Row(
                   mainAxisSize: pw.MainAxisSize.min,
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Image(logo, width: 60, height: 60),
                     pw.SizedBox(width: 12),
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text("PEMERINTAH KABUPATEN KEDIRI", style: pw.TextStyle(fontSize: 12)),
-                        pw.Text("KECAMATAN PAPAR", style: pw.TextStyle(fontSize: 12)),
-                        pw.Text("KANTOR KEPALA DESA TANON", style: pw.TextStyle(fontSize: 12)),
-                        pw.Text("DUSUN ${dusun.toUpperCase()}", style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                        pw.Text("PEMERINTAH KABUPATEN KEDIRI",
+                            style: pw.TextStyle(fontSize: 12)),
+                        pw.Text("KECAMATAN PAPAR",
+                            style: pw.TextStyle(fontSize: 12)),
+                        pw.Text("KANTOR KEPALA DESA TANON",
+                            style: pw.TextStyle(fontSize: 12)),
+                        pw.Text(
+                          "DUSUN ${dusun.toUpperCase()}",
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
+
               pw.SizedBox(height: 12),
-              pw.Divider(thickness: 1),
+              pw.Divider(),
               pw.SizedBox(height: 20),
 
               pw.Center(
                 child: pw.Text(
                   "SURAT PENGANTAR",
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
               ),
+
               pw.SizedBox(height: 20),
 
               pw.Text(
@@ -80,32 +107,46 @@ class RequestPDFController {
                 "memohon kepada Ibu/Bapak Kepala Desa untuk dapatnya dilayani bagi warga kami:",
                 style: pw.TextStyle(fontSize: 12),
               ),
+
               pw.SizedBox(height: 12),
 
               _buildRow("Nama", username),
               _buildRow("Tempat/Tgl Lahir", ttl),
               _buildRow("Agama", agama),
               _buildRow("Kewarganegaraan", warga),
-              _buildRow("Nomor KTP", "-"),
+              _buildRow("Nomor KTP", nik),
               _buildRow("Pekerjaan", pekerjaan),
               _buildRow("Alamat", "RT $rt / RW $rw Dusun $dusun"),
               _buildRow("Status Perkawinan", statusKawin),
-              pw.SizedBox(height: 20),
-              pw.Text("Adapun kebutuhan yang diperlukan sebagai berikut:", style: pw.TextStyle(fontSize: 12)),
-              pw.Text(serviceName, style: pw.TextStyle(fontSize: 12)),
-              pw.SizedBox(height: 20),
-              pw.Text("Demikian untuk menjadikan maklum dan terima kasih atas bantuannya.", style: pw.TextStyle(fontSize: 12)),
-              pw.SizedBox(height: 40),
 
+              pw.SizedBox(height: 20),
+              pw.Text("Adapun kebutuhan yang diperlukan:",
+                  style: pw.TextStyle(fontSize: 12)),
+              pw.Text(serviceName, style: pw.TextStyle(fontSize: 12)),
+
+              pw.SizedBox(height: 30),
+
+              /// ===== BARCODE =====
               pw.Align(
                 alignment: pw.Alignment.centerRight,
                 child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Text(_formatDate(DateTime.now()), style: pw.TextStyle(fontSize: 12)),
-                    pw.Text("Ketua RT", style: pw.TextStyle(fontSize: 12)),
-                    pw.SizedBox(height: 40),
-                    pw.Text(verifiedBy, style: pw.TextStyle(fontSize: 12)),
+                    pw.Text(_formatDate(DateTime.now()),
+                        style: pw.TextStyle(fontSize: 12)),
+                    pw.Text("Ketua RT",
+                        style: pw.TextStyle(fontSize: 12)),
+                    pw.SizedBox(height: 8),
+
+                    pw.BarcodeWidget(
+                      barcode: pw.Barcode.qrCode(),
+                      data: barcodeData,
+                      width: 90,
+                      height: 90,
+                    ),
+
+                    pw.SizedBox(height: 6),
+                    pw.Text(verifiedBy,
+                        style: pw.TextStyle(fontSize: 12)),
                   ],
                 ),
               ),
@@ -131,11 +172,10 @@ class RequestPDFController {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 6),
       child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.SizedBox(width: 150, child: pw.Text(label, style: pw.TextStyle(fontSize: 12))),
-          pw.Text(": ", style: pw.TextStyle(fontSize: 12)),
-          pw.Expanded(child: pw.Text(value, style: pw.TextStyle(fontSize: 12))),
+          pw.SizedBox(width: 150, child: pw.Text(label)),
+          pw.Text(": "),
+          pw.Expanded(child: pw.Text(value)),
         ],
       ),
     );
@@ -156,43 +196,14 @@ class RequestPDFController {
     required Map<String, Service> services,
   }) async {
     final pdf = pw.Document();
-
     pdf.addPage(
       pw.MultiPage(
         build: (context) => [
-          pw.Text(
-            "Laporan Data Pengajuan",
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-            ),
-          ),
-          pw.SizedBox(height: 12),
-          pw.Table.fromTextArray(
-            headers: ["No", "Tanggal", "Layanan", "Nama", "Alamat", "Status", "File"],
-            data: List.generate(requests.length, (index) {
-              final item = requests[index];
-              final user = users[item.userId];
-              final area = areas[item.areaId];
-              final service = services[item.serviceId];
-
-              return [
-                "${index + 1}",
-                "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}",
-                service?.name ?? "-",
-                user?.username ?? "-",
-                area != null
-                    ? "RT ${area.rt}/RW ${area.rw} Dusun ${area.hamlet}"
-                    : "-",
-                item.status,
-                item.fileUrl != null ? "Ada" : "-",
-              ];
-            }),
-          ),
+          pw.Text("Laporan Data Pengajuan",
+              style: pw.TextStyle(fontSize: 18)),
         ],
       ),
     );
-
     await Printing.layoutPdf(
       onLayout: (format) async => pdf.save(),
     );

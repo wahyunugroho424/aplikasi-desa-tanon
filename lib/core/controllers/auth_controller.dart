@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/onesignal_service.dart';
 
 class AuthController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -100,6 +101,7 @@ class AuthController {
     final userDoc = await _firestore.collection('users').doc(uid).get();
 
     if (userDoc.exists) {
+      await OneSignalService.init();
       final role = userDoc.data()!['role'] ?? 'Perangkat Desa';
 
       if (role == 'Warga') {

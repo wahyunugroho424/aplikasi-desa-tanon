@@ -242,29 +242,34 @@ class _LaporanPengajuanDitolakState extends State<LaporanPengajuanDitolak> {
                                               ),
                                               const SizedBox(height: 4),
                                               StreamBuilder<int>(
-                                                stream: _pengajuanController.getTotalDitolakByArea(pengajuan.areaId),
+                                                stream: _pengajuanController.getTotalDitolakByAreaAndCategory(
+                                                  pengajuan.areaId,
+                                                  pengajuan.serviceId, // 🔥 kategori
+                                                ),
                                                 builder: (context, snapshot) {
                                                   if (!snapshot.hasData) {
                                                     return Text(
                                                       'Total: ...',
                                                       style: GoogleFonts.poppins(
                                                         fontSize: 13,
-                                                        fontWeight: FontWeight.w600, 
+                                                        fontWeight: FontWeight.w600,
                                                         color: Colors.grey[600],
                                                       ),
                                                     );
                                                   }
+
                                                   final total = snapshot.data ?? 0;
                                                   return Text(
                                                     'Total Ditolak: $total',
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 13,
-                                                      fontWeight: FontWeight.w600, 
+                                                      fontWeight: FontWeight.w600,
                                                       color: Colors.grey[600],
                                                     ),
                                                   );
                                                 },
                                               ),
+
                                             ],
                                           ),
                                         ),

@@ -282,7 +282,7 @@ class WargaBerandaPage extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () => context.push('/pd/berita'),
+              onTap: () => context.push('/wg/berita'),
               child: Text(
                 'Lihat Semua',
                 style: GoogleFonts.poppins(

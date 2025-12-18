@@ -242,31 +242,35 @@ class _PengajuanSuratState extends State<PengajuanSurat> {
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
-                                              StreamBuilder<int>(
-                                                stream: _pengajuanController
-                                                    .getTotalPengajuanByArea(pengajuan.areaId),
-                                                builder: (context, snapshot) {
-                                                  if (!snapshot.hasData) {
-                                                    return Text(
-                                                      'Total: ...',
-                                                      style: GoogleFonts.poppins(
-                                                        fontSize: 13,
-                                                        fontWeight: FontWeight.w600,
-                                                        color: Colors.grey[600],
-                                                      ),
-                                                    );
-                                                  }
-                                                  final total = snapshot.data ?? 0;
-                                                  return Text(
-                                                    'Total: $total',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
+StreamBuilder<int>(
+  stream: _pengajuanController.getTotalPengajuanByAreaAndCategory(
+    pengajuan.areaId,
+    pengajuan.serviceId, // atau categoryId
+  ),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) {
+      return Text(
+        'Total: ...',
+        style: GoogleFonts.poppins(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[600],
+        ),
+      );
+    }
+
+    final total = snapshot.data!;
+    return Text(
+      'Total: $total',
+      style: GoogleFonts.poppins(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey[600],
+      ),
+    );
+  },
+),
+
                                             ],
                                           ),
                                         ),

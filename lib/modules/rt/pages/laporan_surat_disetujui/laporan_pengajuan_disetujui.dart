@@ -243,30 +243,35 @@ class _LaporanPengajuanDisetujuiState extends State<LaporanPengajuanDisetujui> {
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
-                                              StreamBuilder<int>(
-                                                stream: _pengajuanController.getTotalDisetujuiByArea(pengajuan.areaId),
-                                                builder: (context, snapshot) {
-                                                  if (!snapshot.hasData) {
-                                                    return Text(
-                                                      'Total: ...',
-                                                      style: GoogleFonts.poppins(
-                                                        fontSize: 13,
-                                                        fontWeight: FontWeight.w600, 
-                                                        color: Colors.grey[600],
-                                                      ),
-                                                    );
-                                                  }
-                                                  final total = snapshot.data ?? 0;
-                                                  return Text(
-                                                    'Total Disetujui: $total',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600, 
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
+StreamBuilder<int>(
+  stream: _pengajuanController.getTotalDisetujuiByAreaAndCategory(
+    pengajuan.areaId,
+    pengajuan.serviceId,
+  ),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) {
+      return Text(
+        'Total Disetujui: ...',
+        style: GoogleFonts.poppins(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[600],
+        ),
+      );
+    }
+
+    final total = snapshot.data!;
+    return Text(
+      'Total Disetujui: $total',
+      style: GoogleFonts.poppins(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey[600],
+      ),
+    );
+  },
+),
+
 
 
                                             ],
@@ -278,7 +283,7 @@ class _LaporanPengajuanDisetujuiState extends State<LaporanPengajuanDisetujui> {
                                               '/rt/detail_disetujui',
                                               extra: {
                                                 'serviceName': pengajuan.serviceName ?? '-',
-                                                'areaId': pengajuan.areaId ?? '-',
+                                                  'areaId': pengajuan.areaId,
                                               },
                                             );
                                           },
